@@ -1,0 +1,6 @@
+# Development dependencies
+freezegun==1.4.0             # Time mocking
+respx>=0.20.0                # httpx mock for CoinDCX tests
+
+# API documentation (Served by FastAPI CDN by default)
+# swagger-ui-bundle==1.1.0     # Uncomment if offline Swagger UI is needed
