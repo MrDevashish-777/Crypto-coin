@@ -53,6 +53,7 @@ def detect_latest_candlestick_pattern(
     o2, h2, l2, c2 = opens[i], highs[i], lows[i], closes[i]
 
     body0 = _body(o0, c0)
+    body1 = _body(o1, c1)
     body2 = _body(o2, c2)
     range2 = max(h2 - l2, 1e-9)
     vol_ok = _volume_confirmation(volumes)

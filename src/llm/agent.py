@@ -489,6 +489,66 @@ Market input (pre-gates already validated confluence candidates):
                     )
                     return "NO TRADE"
 
+    async def generate_advisor_narrative(
+        self,
+        *,
+        features: Any,
+        pair: str,
+        levels: Dict[str, Any],
+    ) -> tuple[str, str, str] | None:
+        """Generate three narrative paragraphs for advisor PDFs. Returns None on failure."""
+        from config.prompts import load_advisor_narrative_system
+        from config.settings import settings
+
+        hits = ", ".join(features.confluence_hits[:8])
+        adx_str = f"{features.adx:.1f}" if features.adx is not None else "n/a"
+        user_content = (
+            f"Pair: {pair}\n"
+            f"Side: {features.side}\n"
+            f"Timeframe: {features.timeframe}\n"
+            f"Setup: {features.setup_type}\n"
+            f"Price: {features.price:.4f}\n"
+            f"Confluence hits: {hits}\n"
+            f"RSI: {features.rsi:.1f}\n"
+            f"ADX: {adx_str}\n"
+            f"Volume ratio: {features.volume_ratio:.2f}x\n"
+            f"Entry band: {levels['entry_low']:.4f} – {levels['entry_high']:.4f}\n"
+            f"Stop loss: {levels['stop_loss']:.4f}\n"
+            f"Take profit: {levels['target']:.4f}\n"
+            f"Leverage: {levels.get('leverage', 'n/a')}\n"
+            f"Risk/reward: {levels.get('risk_reward', 'n/a')}\n"
+            "\nWrite exactly three paragraphs separated by one blank line."
+        )
+        system_prompt = load_advisor_narrative_system(
+            override_path=getattr(settings, "ADVISOR_LLM_SYSTEM_PROMPT_PATH", None) or None,
+        )
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+            "stream": False,
+            "options": {"temperature": 0.3, "num_predict": 400},
+        }
+        timeout_seconds = float(getattr(settings, "OLLAMA_REQUEST_TIMEOUT_SECONDS", 120))
+        timeout = httpx.Timeout(connect=5.0, read=timeout_seconds, write=10.0, pool=5.0)
+
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            try:
+                response = await client.post(f"{self.base_url}/api/chat", json=payload)
+                response.raise_for_status()
+                content = response.json().get("message", {}).get("content", "").strip()
+                parts = [p.strip() for p in content.split("\n\n") if p.strip()]
+                if len(parts) >= 3:
+                    return parts[0], parts[1], parts[2]
+                lines = [ln.strip() for ln in content.splitlines() if ln.strip()]
+                if len(lines) >= 3:
+                    return lines[0], lines[1], lines[2]
+            except Exception as e:
+                logger.error("Ollama advisor narrative failed: %r", e)
+        return None
+
     async def generate_signal_confidence(
         self,
         symbol: str,
@@ -567,10 +627,6 @@ class LLMAgentFactory:
             if not base_url:
                 base_url = "http://localhost:11434"
                 logger.info(f"Ollama base_url not provided, using default: {base_url}")
-            return OllamaAgent(base_url, model or "mistral")
-        elif provider == "transformer":
-            from src.llm.transformer_agent import TransformerAgent
-            from config.settings import settings
-            return TransformerAgent(model_path=settings.TRANSFORMER_MODEL_PATH)
+            return OllamaAgent(base_url, model or "0xroyce/plutus")
         else:
-            raise ValueError(f"Unknown provider: {provider}")
+            raise ValueError(f"Unknown provider: {provider}. Use openai, anthropic, or ollama.")

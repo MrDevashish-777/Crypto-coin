@@ -3,11 +3,11 @@ from src.indicators.candlestick_patterns import detect_latest_candlestick_patter
 
 def test_detects_bullish_engulfing():
     pattern = detect_latest_candlestick_pattern(
-        opens=[100, 101, 98],
-        highs=[102, 102, 104],
-        lows=[99, 97, 97],
-        closes=[101, 98, 103],
-        volumes=[1000, 950, 1500],
+        opens=[99, 100, 101, 98],
+        highs=[101, 102, 102, 104],
+        lows=[98, 99, 97, 97],
+        closes=[100, 101, 98, 103],
+        volumes=[900, 1000, 950, 1500],
     )
     assert pattern is not None
     assert pattern["pattern_name"] == "bullish_engulfing"

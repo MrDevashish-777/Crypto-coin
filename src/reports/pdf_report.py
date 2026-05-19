@@ -21,8 +21,10 @@ from src.reports.chart_renderer import render_advisor_chart
 logger = logging.getLogger(__name__)
 
 DISCLAIMER = (
-    "Trading signals are for informational purposes only and do not constitute "
-    "investment advice. Always perform your own due diligence before making investment decisions."
+    "For education and research only — not financial advice. Cryptocurrency futures involve "
+    "substantial risk, including total loss of capital. Leverage amplifies gains and losses. "
+    "Past performance does not guarantee future results. Always do your own research (DYOR) "
+    "before trading."
 )
 
 

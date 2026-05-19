@@ -1,132 +1,140 @@
-# Crypto Trading Bot
+# CoinDCX Futures Advisor
 
-## 🚀 Project Overview
+CoinDCX futures signal research platform: SOP-gated advisor PDFs, a unified confluence engine, and optional Ollama (Plutus) narratives.
 
-**Crypto Trading Bot** is a Python-based framework that combines market data ingestion, technical indicators, strategy-driven signal generation, risk management, and optional LLM-powered analysis to produce actionable crypto trading signals.
-
-Key capabilities:
-- Binance historical and WebSocket price data ingestion
-- Indicator library: EMA, SMA, RSI, MACD, Bollinger Bands, ATR, Ichimoku, Supertrend, VWAP, etc.
-- Strategy plugins: RSI, MACD, Bollinger squeeze, Supertrend, Ichimoku, stochastic RSI, volume breakout
-- Signal engine with entry/exit, take-profit/stop-loss, risk controls
-- FastAPI API endpoints + health checks + WebSockets
-- PostgreSQL backend + SQLAlchemy ORM + Redis cache
-- Docker + Kubernetes deployment manifests
-- Monitoring and logging via structured logger
+> **Disclaimer:** Education and research only — not financial advice. Trading digital assets involves substantial risk.
 
 ---
 
-## 🧩 Quick setup
+## What it does
 
-### 1. Requirements
-- Python 3.11+
-- Poiect/Curl/Make (optional)
-- Docker (optional for containerized run)
+1. Fetches live candles from CoinDCX (public API, no exchange key required)
+2. Runs confluence pre-gates ([`src/planitt/confluence.py`](src/planitt/confluence.py))
+3. Computes entry band, SL, TP, leverage in Python ([`src/advisor/targets.py`](src/advisor/targets.py))
+4. Enforces SOP gates and weekly allocation caps
+5. Optionally generates three narrative paragraphs via Ollama ([`config/prompts/advisor_narrative_system.md`](config/prompts/advisor_narrative_system.md))
+6. Writes PDF + chart to `output/reports/`
 
-### 2. Install
+---
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+## Architecture
+
+```mermaid
+flowchart LR
+  CoinDCX[CoinDCX REST] --> Confluence[confluence.py]
+  Confluence --> Gates[SOP gates + allocation]
+  Gates --> Levels[targets.py]
+  Levels --> LLM[Ollama Plutus narrative]
+  Levels --> PDF[PDF + chart]
+  LLM --> PDF
+  PDF --> MongoDB[(MongoDB history)]
 ```
 
-### 3. Configuration
+---
 
-Copy and customize environment file:
+## Quick start
 
 ```bash
 cp .env.example .env
-# update DB, Binance, Redis, LLM provider keys
-```
+# Edit MONGODB_URI and PLANITT_PROCESSOR_INTERNAL_API_KEY
 
-### 4. Database init
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
 
-```bash
-scripts/create_db.sh
-alembic upgrade head
-```
-
-### 5. Run server
-
-```bash
 python scripts/run_server.py
-# or with uvicorn
-uvicorn src.api.server:app --reload
 ```
 
----
+- API docs: http://localhost:8000/api/docs
+- Health: http://localhost:8000/health
 
-## 🧪 Tests
+### Generate one signal
 
 ```bash
-pytest --maxfail=1 --disable-warnings -q
+export API_KEY="your-key"   # same as PLANITT_PROCESSOR_INTERNAL_API_KEY
+
+curl -X POST "http://localhost:8000/api/v1/advisor/generate" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $API_KEY" \
+  -d '{"symbol": "BTC", "timeframe": "1h"}'
+```
+
+### One-shot scan (no server)
+
+```bash
+python scripts/run_advisor_scan.py
 ```
 
 ---
 
-## 📁 Project layout
+## Configuration
 
-- `src/api` - API server and routes
-- `apps/planitt-admin` - Next.js admin dashboard (hybrid NestJS/FastAPI proxy)
-- `src/data` - Binance client and data fetcher
-- `src/indicators` - indicator implementations
-- `src/signals` - strategies and signal engine
-- `src/risk` - position sizing and risk manager
-- `src/llm` - optional LLM analysis plugin
-- `src/database` - models, CRUD, migrations
-- `scripts` - setup helpers
-- `tests` - tests
+| Variable | Purpose |
+|----------|---------|
+| `MONGODB_URI` | Required — advisor history |
+| `PLANITT_PROCESSOR_INTERNAL_API_KEY` | Protects `/api/v1/advisor/*` via `x-api-key` |
+| `ENABLE_BACKGROUND_SCANNER` | Periodic universe scan |
+| `SCAN_INTERVAL` | Seconds between scans (min 900 enforced) |
+| `MAX_WEEKLY_SIGNALS` | Weekly cap |
+| `ADVISOR_MIN_CONFIDENCE` | Minimum confluence confidence |
+| `LLM_PROVIDER` | `ollama` (default), `openai`, or `anthropic` |
+| `OLLAMA_MODEL` | Default `0xroyce/plutus` |
+| `ENABLE_LLM_ANALYSIS` | LLM narrative on PDF (template fallback if off/unavailable) |
+| `ADVISOR_LLM_SYSTEM_PROMPT_PATH` | Optional override for system prompt file |
 
-## Admin Dashboard
-
-- New admin dashboard lives at `apps/planitt-admin`.
-- Cutover/migration guide: `ADMIN_DASHBOARD_CUTOVER.md`.
-- Production admin deployment (`planitt-crypto.netlify.app`) uses server-side Next routes.
-- Recommended hosted-admin setup: `ADMIN_DEPLOYMENT_MODE=single_backend`.
-- Set these Netlify environment variables for admin API calls:
-  - `NEST_API_BASE_URL=https://planitt-backend-crypto.onrender.com`
-  - `NEST_API_INTERNAL_API_KEY=<same value as backend PLANITT_INTERNAL_API_KEY>`
-  - `ADMIN_DEPLOYMENT_MODE=single_backend`
-  - `NEXTAUTH_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`
-- Keep local worker processing enabled with `ENABLE_BACKGROUND_SCANNER=true`.
-- Do not deploy FastAPI as a public service; use `planitt-backend` on Render as the only public API layer.
-- Ensure local worker envs are set: `PLANITT_BACKEND_BASE_URL`, `PLANITT_BACKEND_INTERNAL_API_KEY`, and `ENABLE_POSTGRES_DB_INIT=false`.
-- Important naming: `NEST_API_BASE_URL` is for admin panel routes, while `PLANITT_BACKEND_BASE_URL` is for local worker-to-backend calls.
+See [`.env.example`](.env.example) and [`config/settings.py`](config/settings.py).
 
 ---
 
-## 🛠 Development
+## Ollama setup
 
-- Use formatting: `black src tests scripts`.
-- Lint: `ruff check src tests scripts`
-- Type check: `mypy src tests`
+```bash
+ollama pull 0xroyce/plutus
+# Optional alias with embedded system prompt:
+ollama create cryptotradeai -f ollama/Modelfile
+```
 
-### Recommended workflow
-1. create feature branch
-2. run tests locally
-3. open PR with clear description and resolvers
-
----
-
-## 🧾 Contribution
-
-Open issues or PRs for bugs, improvements, new strategies, or docs updates.
-
-- Add strategy tests under `tests/`
-- Keep deterministic behavior in signal generation
-- Document new config keys in `config/settings.py`
+Manual chat prompts (not used by the scanner): [docs/ADVISOR_LLM.md](docs/ADVISOR_LLM.md)
 
 ---
 
-## 📄 License
+## Repository layout
 
-MIT License (or your chosen license)
+```
+config/           settings, constants, prompts/
+src/advisor/      SOP pipeline, PDF generation
+src/planitt/      Confluence engine, Mongo persistence helpers
+src/data/         CoinDCX client and DataFetcher
+src/indicators/   Technical indicator library
+src/llm/          Ollama / OpenAI / Anthropic agents
+src/reports/      PDF and chart rendering
+src/api/          FastAPI server and routes
+scripts/          run_server.py, run_advisor_scan.py
+tests/            Advisor and confluence tests
+```
 
 ---
 
-## ⚠️ Safety Disclaimer
+## Testing
 
-Trading digital assets involves risk. This project is for educational purposes only; not financial advice.
+```bash
+pip install -r requirements-dev.txt
+pytest tests/test_advisor_sop_gates.py tests/test_advisor_allocation.py \
+  tests/test_coindcx_client.py tests/test_advisor_pdf_smoke.py \
+  tests/test_advisor_narrative.py -q
+```
+
+---
+
+## Related docs
+
+| Document | Purpose |
+|----------|---------|
+| [START_HERE.md](START_HERE.md) | 5-minute bootstrap |
+| [docs/ADVISOR_LLM.md](docs/ADVISOR_LLM.md) | Manual LLM prompt templates |
+| [TRADING_STRATEGIES.md](TRADING_STRATEGIES.md) | Strategy framework and risk models |
+
+---
+
+## License
+
+MIT License (or your chosen license).

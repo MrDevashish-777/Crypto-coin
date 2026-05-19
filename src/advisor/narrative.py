@@ -42,18 +42,14 @@ async def generate_narrative(
     if llm_agent is None:
         return default_narrative(features, pair=pair, levels=levels)
     try:
-        prompt = (
-            f"Write 3 short paragraphs for a crypto futures {features.side} call on {pair}.\n"
-            f"1) Why this token 2) Entry technical trigger 3) What to monitor after entry.\n"
-            f"Setup: {features.setup_type}, hits: {features.confluence_hits}, "
-            f"entry {levels['entry_low']}-{levels['entry_high']}, SL {levels['stop_loss']}, TP {levels['target']}.\n"
-            "Keep each under 60 words. No invented prices."
-        )
-        if hasattr(llm_agent, "generate_text"):
-            text = await llm_agent.generate_text(prompt)  # type: ignore[attr-defined]
-            parts = [p.strip() for p in str(text).split("\n\n") if p.strip()]
-            if len(parts) >= 3:
-                return parts[0], parts[1], parts[2]
+        if hasattr(llm_agent, "generate_advisor_narrative"):
+            result = await llm_agent.generate_advisor_narrative(  # type: ignore[attr-defined]
+                features=features,
+                pair=pair,
+                levels=levels,
+            )
+            if result and len(result) == 3 and all(result):
+                return result
     except Exception as exc:
         logger.warning("LLM narrative fallback: %s", exc)
     return default_narrative(features, pair=pair, levels=levels)
