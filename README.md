@@ -34,6 +34,8 @@ flowchart LR
 
 ## Quick start
 
+**Mac mini M4 (Apple Silicon):** see [docs/MAC_MINI_M4.md](docs/MAC_MINI_M4.md) for Homebrew Python, MongoDB, Ollama, and arm64 notes.
+
 ```bash
 cp .env.example .env
 # Edit MONGODB_URI and PLANITT_PROCESSOR_INTERNAL_API_KEY
@@ -130,6 +132,7 @@ pytest tests/test_advisor_sop_gates.py tests/test_advisor_allocation.py \
 | Document | Purpose |
 |----------|---------|
 | [START_HERE.md](START_HERE.md) | 5-minute bootstrap |
+| [docs/MAC_MINI_M4.md](docs/MAC_MINI_M4.md) | Apple Silicon (M4) install and tuning |
 | [docs/ADVISOR_LLM.md](docs/ADVISOR_LLM.md) | Manual LLM prompt templates |
 | [TRADING_STRATEGIES.md](TRADING_STRATEGIES.md) | Strategy framework and risk models |
 

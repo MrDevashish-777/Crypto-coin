@@ -34,21 +34,23 @@ class WeeklyAllocationTracker:
         self.published.append({"symbol": symbol.upper(), "at": ts})
 
     def can_publish(self, symbol: str, now: datetime | None = None) -> tuple[bool, str | None]:
-        recent = self.recent_publishes(now)
+        now_ts = now or datetime.now(timezone.utc)
+        recent = self.recent_publishes(now_ts)
         if len(recent) >= settings.MAX_WEEKLY_SIGNALS:
             return False, "weekly_cap_reached"
 
         sym = symbol.upper()
-        today_symbols = {
-            p["symbol"]
-            for p in recent
-            if datetime.fromisoformat(p["at"]).date() == (now or datetime.now(timezone.utc)).date()
-        }
-        if sym in today_symbols:
-            return False, "duplicate_symbol_today"
+        cooldown_hours = max(settings.ADVISOR_SYMBOL_COOLDOWN_HOURS, 0)
+        if cooldown_hours > 0:
+            cooldown_cutoff = now_ts - timedelta(hours=cooldown_hours)
+            if any(
+                p.get("symbol") == sym and datetime.fromisoformat(p["at"]) >= cooldown_cutoff
+                for p in recent
+            ):
+                return False, f"duplicate_symbol_cooldown_{cooldown_hours}h"
 
         n = len(recent)
-        if n > 0:
+        if n > 0 and settings.ADVISOR_STRICT_ALLOCATION:
             btc_count = sum(1 for p in recent if p["symbol"] == "BTC")
             majors_count = sum(1 for p in recent if p["symbol"] in MAJOR_SYMBOLS)
             projected_n = n + 1

@@ -47,11 +47,11 @@ def validate_levels(
     if not (low <= live_price <= high):
         return SOPValidationResult(False, "price_outside_entry_range")
 
-    if sl_pct < SOP_MIN_TP_SL_PCT - 0.01 or tp_pct < SOP_MIN_TP_SL_PCT - 0.01:
+    if sl_pct < settings.SOP_MIN_SL_PCT - 0.01 or tp_pct < settings.SOP_MIN_SL_PCT - 0.01:
         return SOPValidationResult(False, f"tp_sl_pct_too_tight:sl={sl_pct} tp={tp_pct}")
 
     lev_sl = sl_pct * leverage
-    if lev_sl < SOP_LEVERAGED_SL_MIN - 0.5 or lev_sl > SOP_LEVERAGED_SL_MAX + 0.5:
+    if lev_sl < settings.SOP_LEVERAGED_SL_MIN - 0.5 or lev_sl > settings.SOP_LEVERAGED_SL_MAX + 0.5:
         return SOPValidationResult(False, f"leveraged_sl_{lev_sl:.1f}")
 
     expected_lev = 20.0 / sl_pct if sl_pct > 0 else 0
@@ -62,12 +62,12 @@ def validate_levels(
         rr_val = float(risk_reward.split(":", 1)[1])
     except (IndexError, ValueError):
         return SOPValidationResult(False, "invalid_rr_format")
-    if rr_val < SOP_MIN_RR:
-        return SOPValidationResult(False, f"rr_below_{SOP_MIN_RR}")
+    if rr_val < settings.SOP_MIN_RR:
+        return SOPValidationResult(False, f"rr_below_{settings.SOP_MIN_RR}")
 
     risk = abs(entry_mid - stop_loss)
     reward = abs(target - entry_mid)
-    if reward / max(risk, 1e-9) < SOP_MIN_RR - 0.05:
+    if reward / max(risk, 1e-9) < settings.SOP_MIN_RR - 0.05:
         return SOPValidationResult(False, "actual_rr_too_low")
 
     if direction == "BUY":

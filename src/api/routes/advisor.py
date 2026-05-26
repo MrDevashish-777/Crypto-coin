@@ -78,7 +78,7 @@ async def scan_advisor_universe(
     if margin_currency:
         proc.margin_currency = margin_currency.upper()
     results = await proc.scan_universe()
-    published = sum(1 for r in results if r.get("ok"))
+    published = sum(1 for r in results if r.get("phase") == "publish" and r.get("ok"))
     return {"scanned": len(results), "published": published, "results": results}
 
 

@@ -10,9 +10,11 @@
 
 ## Prerequisites
 
-- **Python 3.11+**
+- **Python 3.11+** (on Mac mini M4 use Homebrew `python@3.12` — not macOS `/usr/bin/python3` 3.9)
 - **MongoDB** (`MONGODB_URI` in `.env`) — startup fails without it
-- **Optional:** [Ollama](https://ollama.com/) when `ENABLE_LLM_ANALYSIS=true`
+- **Optional:** [Ollama](https://ollama.com/) when `ENABLE_LLM_ANALYSIS=true` (native arm64 + Metal on M4)
+
+**Mac mini M4:** full guide → [docs/MAC_MINI_M4.md](docs/MAC_MINI_M4.md)
 
 CoinDCX uses the public REST API — no exchange API key required.
 
@@ -34,6 +36,24 @@ PLANITT_PROCESSOR_INTERNAL_API_KEY=your-secret-key-here
 ```
 
 ### 2. Install (~2 min)
+
+On **Mac mini M4**, prefer Homebrew Python (arm64):
+
+```bash
+# once (MongoDB needs a tap first — see docs/MAC_MINI_M4.md)
+brew tap mongodb/brew
+brew install python@3.12 mongodb-community@8.0 ollama
+brew services start mongodb-community@8.0
+brew services start ollama
+
+/opt/homebrew/bin/python3.12 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+python scripts/check_mac_setup.py
+```
+
+Other platforms:
 
 ```bash
 python3 -m venv .venv
@@ -128,8 +148,8 @@ No. Research signals and PDFs only.
 **Why 422 on advisor generate?**  
 SOP gates, weekly caps, or confluence rejected the setup. Check the API error body.
 
-**LLM not changing PDF text?**  
-Ensure Ollama is running, `ENABLE_LLM_ANALYSIS=true`, and `OLLAMA_MODEL=0xroyce/plutus`. On failure the bot uses a deterministic template.
+**Port 8000 in use**  
+Another app (often **Docker**) is bound to 8000. Either stop it (`docker ps` then `docker stop <id>`) or set `SERVER_PORT=8001` in `.env` and use http://localhost:8001.
 
 ---
 

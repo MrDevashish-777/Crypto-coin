@@ -1,79 +1,86 @@
 """
-MongoDB connection manager for Crypto Bot.
-Replaces the old SQLAlchemy/PostgreSQL implementation.
-Uses Motor (async MongoDB driver) connected to MongoDB Atlas.
+MongoDB connection manager — Motor async client (Atlas or local).
 """
 from __future__ import annotations
 
 import logging
-import os
-
 from typing import Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-logger = logging.getLogger(__name__)
+from config.settings import settings
 
-# ---------------------------------------------------------------------------
-# Singleton client
-# ---------------------------------------------------------------------------
+logger = logging.getLogger(__name__)
 
 _client: Optional[AsyncIOMotorClient] = None
 _db: Optional[AsyncIOMotorDatabase] = None
 
-MONGODB_URI: str = os.environ.get(
-    "MONGODB_URI",
-    "mongodb://localhost:27017",
-)
-MONGODB_DB_NAME: str = os.environ.get("MONGODB_DB_NAME", "planitt")
+
+def _mongo_uri() -> str:
+    return settings.MONGODB_URI
+
+
+def _mongo_db_name() -> str:
+    return settings.MONGODB_DB_NAME
 
 
 async def get_db() -> AsyncIOMotorDatabase:
     """Return the shared MongoDB database handle (singleton)."""
     global _client, _db
     if _client is None:
-        _client = AsyncIOMotorClient(
-            MONGODB_URI,
-            # Connection pool tuned for Render Starter (512 MB RAM)
-            maxPoolSize=50,
-            minPoolSize=5,
-            serverSelectionTimeoutMS=5_000,
-            connectTimeoutMS=10_000,
-            socketTimeoutMS=20_000,
-        )
-        _db = _client[MONGODB_DB_NAME]
-        logger.info("✓ MongoDB client created for Crypto Bot (db=%s)", MONGODB_DB_NAME)
+        uri = _mongo_uri()
+        db_name = _mongo_db_name()
+        client_options = {
+            "maxPoolSize": settings.MONGODB_MAX_POOL_SIZE,
+            "minPoolSize": settings.MONGODB_MIN_POOL_SIZE,
+            "serverSelectionTimeoutMS": settings.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
+            "connectTimeoutMS": settings.MONGODB_CONNECT_TIMEOUT_MS,
+            "socketTimeoutMS": settings.MONGODB_SOCKET_TIMEOUT_MS,
+            "retryReads": True,
+            "retryWrites": True,
+        }
+
+        # Atlas requires TLS; certifi avoids trust-store edge cases on some macOS setups.
+        if uri.startswith("mongodb+srv://"):
+            try:
+                import certifi
+
+                client_options["tlsCAFile"] = certifi.where()
+            except Exception:
+                logger.warning("certifi not available; using system CA for Atlas TLS")
+
+        _client = AsyncIOMotorClient(uri, **client_options)
+        _db = _client[db_name]
+        host_hint = "Atlas" if uri.startswith("mongodb+srv://") else uri.split("@")[-1][:40]
+        logger.info("MongoDB client created (db=%s, host=%s)", db_name, host_hint)
     return _db
 
 
 async def init_db() -> None:
-    """Index lifecycle is centralized in ``scripts/ensure_indexes.py`` (CI / deploy hook).
-
-    Crypto-specific compound indexes on ``signals`` / ``news`` are created there together
-    with the rest of Planitt so definitions do not drift across services.
-    """
     await get_db()
-    logger.info("Crypto Bot: skipping per-service index creation (use scripts/ensure_indexes.py).")
+    logger.info("MongoDB ready (index creation optional via scripts/ensure_indexes.py)")
 
 
 async def close_db() -> None:
-    """Gracefully close the MongoDB connection."""
-    global _client
+    global _client, _db
     if _client is not None:
         _client.close()
         _client = None
+        _db = None
         logger.info("MongoDB connection closed")
 
 
 async def test_connection() -> bool:
-    """Ping MongoDB — used in startup health check."""
     try:
         db = await get_db()
         await db.command("ping")
-        logger.info("✓ MongoDB connection successful")
+        logger.info("MongoDB connection successful")
         return True
     except Exception as exc:
-        logger.error("✗ MongoDB connection failed: %s", exc)
+        if _mongo_uri().startswith("mongodb+srv://"):
+            logger.error(
+                "MongoDB Atlas connection failed. Verify Atlas Network Access allows this machine IP "
+                "and connection URI credentials are correct."
+            )
+        logger.error("MongoDB connection failed: %s", exc)
         return False
-
-

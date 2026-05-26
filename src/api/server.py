@@ -7,10 +7,10 @@ import asyncio
 import logging
 
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from config.settings import settings
@@ -75,18 +75,32 @@ def create_app() -> FastAPI:
     async def health_check():
         return {"status": "healthy", "app": settings.APP_NAME, "version": settings.APP_VERSION}
 
-    @app.get("/api", tags=["Root"])
-    async def api_root():
+    def _service_links() -> dict:
         return {
             "app": settings.APP_NAME,
             "version": settings.APP_VERSION,
+            "message": "API-only server — no web dashboard. Use Swagger UI or curl.",
             "endpoints": {
-                "advisor": "/api/v1/advisor",
-                "news": "/api/v1/news",
-                "health": "/health",
                 "docs": "/api/docs",
+                "health": "/health",
+                "advisor_generate": "POST /api/v1/advisor/generate (header x-api-key)",
+                "advisor_health": "GET /api/v1/advisor/health (header x-api-key)",
+                "news": "GET /api/v1/news",
+                "metrics": "/metrics",
             },
+            "pdf_output_dir": settings.ADVISOR_OUTPUT_DIR,
         }
+
+    @app.get("/", tags=["Root"], include_in_schema=False)
+    async def root(request: Request):
+        """Browser-friendly entry: redirect to Swagger; JSON for API clients."""
+        if "text/html" in (request.headers.get("accept") or ""):
+            return RedirectResponse(url="/api/docs")
+        return _service_links()
+
+    @app.get("/api", tags=["Root"])
+    async def api_root():
+        return _service_links()
 
     async def pull_ollama_model() -> None:
         if settings.LLM_PROVIDER != "ollama":
@@ -168,7 +182,9 @@ def create_app() -> FastAPI:
             try:
                 logger.info("Advisor scanner: starting universe scan...")
                 results = await processor.scan_universe()
-                published = sum(1 for r in results if r.get("ok"))
+                published = sum(
+                    1 for r in results if r.get("phase") == "publish" and r.get("ok")
+                )
                 logger.info("Advisor scanner: published %d signals", published)
             except Exception as exc:
                 logger.exception("Advisor scanner error: %s", exc)

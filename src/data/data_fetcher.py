@@ -60,6 +60,8 @@ class DataFetcher:
         try:
             candles = await self.coindcx.merge_ws_with_rest(pair, timeframe, limit=limit)
             if len(candles) < required:
+                if len(candles) == 0:
+                    raise ValueError(f"no_data:{symbol}:{timeframe}")
                 raise ValueError(
                     f"Insufficient candles for {timeframe}: {len(candles)} (required: {required})"
                 )
@@ -68,8 +70,11 @@ class DataFetcher:
             self.last_fetch_time[cache_key] = datetime.utcnow().timestamp()
             logger.info("Fetched %d candles for %s %s (%s)", len(candles), symbol, timeframe, pair)
             return candle_list
-        except CoinDCXAPIError:
-            logger.exception("CoinDCX API error for %s %s", symbol, timeframe)
+        except CoinDCXAPIError as exc:
+            if "no_data" in str(exc):
+                logger.warning("No candle data from CoinDCX for %s %s (%s)", symbol, timeframe, pair)
+            else:
+                logger.error("CoinDCX API error for %s %s: %s", symbol, timeframe, exc)
             raise
 
     async def fetch_all_symbols(

@@ -195,11 +195,19 @@ class CoinDCXClient:
         if rest_res is None:
             return await self._fetch_aggregated(pair, timeframe, limit)
 
-        candles = await self._fetch_rest_candles(pair, rest_res, limit)
+        aggregate_factor = 1
         if timeframe == "15m" and rest_res == "5":
-            candles = _aggregate_candles(candles, 3)
+            aggregate_factor = 3
         elif timeframe == "4h" and rest_res == "60":
-            candles = _aggregate_candles(candles, 4)
+            aggregate_factor = 4
+
+        # REST resolution may be finer than target TF — fetch enough raw bars before aggregating.
+        raw_limit = limit * aggregate_factor + (10 if aggregate_factor > 1 else 5)
+        candles = await self._fetch_rest_candles(pair, rest_res, raw_limit)
+
+        if aggregate_factor > 1:
+            candles = _aggregate_candles(candles, aggregate_factor)
+
         return candles[-limit:] if len(candles) > limit else candles
 
     async def _fetch_aggregated(self, pair: str, timeframe: str, limit: int) -> list[Candle]:
@@ -267,6 +275,9 @@ class CoinDCXClient:
                 await asyncio.sleep(backoff_s)
                 backoff_s *= 2
                 continue
+
+            if isinstance(body, dict) and body.get("s") == "no_data":
+                return []
 
             if isinstance(body, dict) and body.get("s") not in (None, "ok"):
                 raise CoinDCXAPIError(f"CoinDCX candle status: {body.get('s')}")

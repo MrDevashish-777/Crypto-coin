@@ -1,6 +1,16 @@
-# Development dependencies
-freezegun==1.4.0             # Time mocking
-respx>=0.20.0                # httpx mock for CoinDCX tests
+-r requirements.txt
 
-# API documentation (Served by FastAPI CDN by default)
-# swagger-ui-bundle==1.1.0     # Uncomment if offline Swagger UI is needed
+# Testing
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+freezegun>=1.4.0
+respx>=0.20.0
+
+# Code quality (optional)
+black>=23.11.0
+ruff>=0.1.5
+
+# Optional scripts (backtest_report.py)
+scikit-learn>=1.4.0

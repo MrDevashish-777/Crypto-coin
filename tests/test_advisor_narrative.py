@@ -35,6 +35,8 @@ def _sample_features() -> ConfluenceFeatures:
         candlestick_bias=None,
         candlestick_strength=0.0,
         candlestick_confirmed=False,
+        agreeing_sources=6,
+        mtf_score=1.0,
     )
 
 

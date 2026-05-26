@@ -18,9 +18,11 @@ from src.indicators.pivot_points import PivotPoints
 from src.indicators.heikin_ashi import HeikinAshi
 from src.indicators.adx import ADX
 from src.indicators.candlestick_patterns import detect_latest_candlestick_pattern
+from src.indicators.nadaraya_watson import NadarayaWatsonEnvelope, NWESnapshot
 
 __all__ = [
     "RSI", "MACD", "BollingerBands", "Stochastic", "ATR", "EMA", "SMA",
     "Ichimoku", "Supertrend", "VWAP", "OBV", "WilliamsR", "CCI",
-    "FibonacciLevels", "PivotPoints", "HeikinAshi", "ADX", "detect_latest_candlestick_pattern",
+    "FibonacciLevels", "PivotPoints", "HeikinAshi", "ADX",
+    "NadarayaWatsonEnvelope", "NWESnapshot", "detect_latest_candlestick_pattern",
 ]

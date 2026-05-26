@@ -46,6 +46,28 @@ def test_aggregate_candles_groups_of_three() -> None:
 
 
 @pytest.mark.asyncio
+async def test_get_klines_15m_requests_triple_raw_bars(monkeypatch) -> None:
+    captured: dict[str, int] = {}
+
+    async def _fake_fetch(self, pair: str, resolution: str, limit: int) -> list:
+        captured["resolution"] = resolution
+        captured["limit"] = limit
+        base = [
+            Candle(timestamp=i * 300000, open=100.0, high=101.0, low=99.0, close=100.5, volume=1.0)
+            for i in range(limit)
+        ]
+        return base
+
+    monkeypatch.setattr(CoinDCXClient, "_fetch_rest_candles", _fake_fetch)
+    client = CoinDCXClient()
+    candles = await client.get_klines("B-BTC_USDT", "15m", limit=30)
+    await client.close()
+    assert captured["resolution"] == "5"
+    assert captured["limit"] == 30 * 3 + 10
+    assert len(candles) == 30
+
+
+@pytest.mark.asyncio
 async def test_get_klines_parses_response(monkeypatch) -> None:
     async def _fake_fetch(self, pair: str, resolution: str, limit: int) -> list:
         from src.data.models import Candle

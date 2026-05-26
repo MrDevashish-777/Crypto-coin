@@ -130,6 +130,110 @@ def detect_latest_candlestick_pattern(
                 "bar_index": i,
             }
 
+    # Inside bar (NR-style consolidation) — check before harami
+    if h2 <= h1 and l2 >= l1 and body2 < body1 * 0.8:
+        bias: PatternBias = "bull" if c2 > o2 else "bear"
+        strength = min(0.80, 0.54 + (0.06 if vol_ok else 0))
+        return {
+            "pattern_name": "inside_bar",
+            "bias": bias,
+            "strength": float(strength),
+            "confirmation": vol_ok,
+            "bar_index": i,
+        }
+
+    # Three white soldiers
+    range0 = max(h0 - l0, 1e-9)
+    range1 = max(h1 - l1, 1e-9)
+    if c0 > o0 and c1 > o1 and c2 > o2 and c1 > c0 and c2 > c1:
+        if body0 / range0 > 0.40 and body1 / range1 > 0.40 and body2 / range2 > 0.40:
+            strength = min(0.92, 0.62 + (0.1 if vol_ok else 0))
+            return {
+                "pattern_name": "three_white_soldiers",
+                "bias": "bull",
+                "strength": float(strength),
+                "confirmation": vol_ok,
+                "bar_index": i,
+            }
+
+    # Three black crows
+    if c0 < o0 and c1 < o1 and c2 < o2 and c1 < c0 and c2 < c1:
+        if body0 / range0 > 0.40 and body1 / range1 > 0.40 and body2 / range2 > 0.40:
+            strength = min(0.92, 0.62 + (0.1 if vol_ok else 0))
+            return {
+                "pattern_name": "three_black_crows",
+                "bias": "bear",
+                "strength": float(strength),
+                "confirmation": vol_ok,
+                "bar_index": i,
+            }
+
+    # Tweezer bottom
+    if abs(l1 - l2) / max(l1, 1e-9) <= 0.002 and c2 > o2 and c1 <= o1:
+        strength = min(0.88, 0.58 + (0.08 if vol_ok else 0))
+        return {
+            "pattern_name": "tweezer_bottom",
+            "bias": "bull",
+            "strength": float(strength),
+            "confirmation": vol_ok,
+            "bar_index": i,
+        }
+
+    # Tweezer top
+    if abs(h1 - h2) / max(h1, 1e-9) <= 0.002 and c2 < o2 and c1 >= o1:
+        strength = min(0.88, 0.58 + (0.08 if vol_ok else 0))
+        return {
+            "pattern_name": "tweezer_top",
+            "bias": "bear",
+            "strength": float(strength),
+            "confirmation": vol_ok,
+            "bar_index": i,
+        }
+
+    # Bullish harami
+    if c1 < o1 and c2 > o2 and o2 >= c1 and c2 <= o1 and body2 < body1 * 0.6:
+        strength = min(0.85, 0.56 + (0.08 if vol_ok else 0))
+        return {
+            "pattern_name": "bullish_harami",
+            "bias": "bull",
+            "strength": float(strength),
+            "confirmation": vol_ok,
+            "bar_index": i,
+        }
+
+    # Bearish harami
+    if c1 > o1 and c2 < o2 and o2 <= c1 and c2 >= o1 and body2 < body1 * 0.6:
+        strength = min(0.85, 0.56 + (0.08 if vol_ok else 0))
+        return {
+            "pattern_name": "bearish_harami",
+            "bias": "bear",
+            "strength": float(strength),
+            "confirmation": vol_ok,
+            "bar_index": i,
+        }
+
+    # Pin bar (bullish rejection)
+    if lower2 >= range2 * 0.60 and upper2 <= range2 * 0.15 and c2 > o2:
+        strength = min(0.90, 0.58 + (lower2 / range2) * 0.2 + (0.06 if vol_ok else 0))
+        return {
+            "pattern_name": "bullish_pin_bar",
+            "bias": "bull",
+            "strength": float(strength),
+            "confirmation": vol_ok,
+            "bar_index": i,
+        }
+
+    # Pin bar (bearish rejection)
+    if upper2 >= range2 * 0.60 and lower2 <= range2 * 0.15 and c2 < o2:
+        strength = min(0.90, 0.58 + (upper2 / range2) * 0.2 + (0.06 if vol_ok else 0))
+        return {
+            "pattern_name": "bearish_pin_bar",
+            "bias": "bear",
+            "strength": float(strength),
+            "confirmation": vol_ok,
+            "bar_index": i,
+        }
+
     # Doji with slight directional bias using previous candle body
     doji_ratio = body2 / range2
     if doji_ratio <= 0.12:

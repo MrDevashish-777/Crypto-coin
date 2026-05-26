@@ -43,12 +43,14 @@ def build_advisor_document(signal: AdvisorSignal) -> dict[str, Any]:
         "pdf_path": signal.pdf_path,
         "chart_path": signal.chart_path,
         "review_status": "AUTO_PUBLISHED",
+        "status": "OPEN",
+        "outcome": "open",
     }
 
 
 async def persist_advisor_signal(signal: AdvisorSignal) -> str:
     db = await get_db()
-    coll = crypto_signals_collection(db)
+    coll = db[crypto_signals_collection()]
     doc = build_advisor_document(signal)
     await coll.update_one(
         {"signal_id": signal.signal_id},
@@ -62,7 +64,7 @@ async def persist_advisor_signal(signal: AdvisorSignal) -> str:
 async def load_weekly_publish_records() -> list[dict[str, str]]:
     """Load advisor publishes from last 7 days for allocation tracker."""
     db = await get_db()
-    coll = crypto_signals_collection(db)
+    coll = db[crypto_signals_collection()]
     cutoff = datetime.now(timezone.utc).timestamp() - 7 * 86400
     cursor = coll.find(
         {"source_backend": "coindcx_advisor"},
@@ -84,3 +86,59 @@ async def load_weekly_publish_records() -> list[dict[str, str]]:
             continue
         records.append({"symbol": str(doc.get("symbol", "")).upper(), "at": ts.isoformat()})
     return records
+
+
+async def close_advisor_signals(symbol: str, latest_price: float) -> int:
+    """Close open advisor signals when TP/SL is hit."""
+    db = await get_db()
+    coll = db[crypto_signals_collection()]
+    query = {
+        "source_backend": "coindcx_advisor",
+        "symbol": symbol.upper(),
+        "status": "OPEN",
+    }
+    active_docs = await coll.find(query, {"_id": 0}).to_list(200)
+    closed_count = 0
+    now = datetime.now(timezone.utc)
+
+    for doc in active_docs:
+        direction = str(doc.get("direction", "BUY"))
+        entry_range = doc.get("entry_range") or [0.0, 0.0]
+        entry = (float(entry_range[0]) + float(entry_range[1])) / 2.0
+        tp = float(doc.get("target") or 0.0)
+        sl = float(doc.get("stop_loss") or 0.0)
+        status = "OPEN"
+        outcome = "open"
+
+        if direction == "BUY":
+            if latest_price >= tp:
+                status = "TP_HIT"
+                outcome = "tp_hit"
+            elif latest_price <= sl:
+                status = "SL_HIT"
+                outcome = "sl_hit"
+        elif direction == "SELL":
+            if latest_price <= tp:
+                status = "TP_HIT"
+                outcome = "tp_hit"
+            elif latest_price >= sl:
+                status = "SL_HIT"
+                outcome = "sl_hit"
+
+        if status != "OPEN":
+            risk = abs(entry - sl)
+            reward = abs(latest_price - entry)
+            pnl_r = (reward / risk) if risk > 0 else None
+            await coll.update_one(
+                {"signal_id": doc["signal_id"]},
+                {
+                    "$set": {
+                        "status": status,
+                        "outcome": outcome,
+                        "closed_at": now.isoformat(),
+                        "pnl_r_multiple": pnl_r,
+                    }
+                },
+            )
+            closed_count += 1
+    return closed_count

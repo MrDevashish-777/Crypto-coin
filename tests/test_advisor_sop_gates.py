@@ -17,7 +17,7 @@ def test_validate_levels_buy_ok() -> None:
         tp_pct=5.5,
         leverage=8.0,
         risk_reward="1:2.0",
-        confidence=0.75,
+        confidence=0.82,
     )
     assert result.ok
 

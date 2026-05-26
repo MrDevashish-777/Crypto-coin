@@ -52,7 +52,6 @@ CRYPTO_PAIRS = {
     "ATOM": "ATOM",
     "NEAR": "NEAR",
     "DOT": "DOT",
-    "MATIC": "MATIC",
     "UNI": "UNI",
     "APT": "APT",
     "ARB": "ARB",
