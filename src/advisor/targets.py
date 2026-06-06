@@ -298,6 +298,9 @@ def compute_advisor_levels(
             stop_loss = entry_mid * (1 + sl_pct / 100.0)
         if target >= entry_low:
             target = entry_mid - abs(stop_loss - entry_mid) * min_rr
+            
+    if target <= 0:
+        target = entry_mid * 0.01
 
     tp_pct = abs(target - entry_mid) / entry_mid * 100.0
     risk = abs(entry_mid - stop_loss)

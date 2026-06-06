@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     MAX_WEEKLY_SIGNALS: int = int(os.getenv("MAX_WEEKLY_SIGNALS", "14"))
     MIN_WEEKLY_BTC_PCT: float = float(os.getenv("MIN_WEEKLY_BTC_PCT", "0.20"))
     MIN_WEEKLY_MAJORS_PCT: float = float(os.getenv("MIN_WEEKLY_MAJORS_PCT", "0.35"))
-    ADVISOR_STRICT_ALLOCATION: bool = os.getenv("ADVISOR_STRICT_ALLOCATION", "false").lower() == "true"
+    ADVISOR_STRICT_ALLOCATION: bool = os.getenv("ADVISOR_STRICT_ALLOCATION", "true").lower() == "true"
     ADVISOR_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_MIN_CONFIDENCE", "0.72"))
     ADVISOR_OUTPUT_DIR: str = os.getenv("ADVISOR_OUTPUT_DIR", "output/reports")
     ADVISOR_MIN_CONFLUENCE_HITS: int = int(os.getenv("ADVISOR_MIN_CONFLUENCE_HITS", "3"))
@@ -139,6 +139,13 @@ class Settings(BaseSettings):
     MIN_RISK_REWARD_RATIO: float = 1.5
     MAX_POSITION_SIZE: float = 0.05
     MIN_POSITION_SIZE: float = 0.01
+
+    # Delta Exchange Execution
+    DELTA_API_KEY: str = os.getenv("DELTA_API_KEY", "")
+    DELTA_API_SECRET: str = os.getenv("DELTA_API_SECRET", "")
+    DELTA_TESTNET: bool = os.getenv("DELTA_TESTNET", "true").lower() == "true"
+    DELTA_EXECUTION_ENABLED: bool = os.getenv("DELTA_EXECUTION_ENABLED", "false").lower() == "true"
+    DELTA_MAX_PORTFOLIO_RISK_PCT: float = float(os.getenv("DELTA_MAX_PORTFOLIO_RISK_PCT", "70.0"))
 
     # Trading universe
     SUPPORTED_CRYPTOS: list[str] = [

@@ -6,6 +6,7 @@ import logging
 from dataclasses import replace
 from datetime import datetime, timezone
 from typing import Any
+import asyncio
 
 from config.constants import CRYPTO_PAIRS
 from config.settings import settings
@@ -93,6 +94,11 @@ class AdvisorProcessor:
             return {"ok": False, "reject_reason": f"unsupported_symbol:{symbol}"}
 
         if not dry_run:
+            from src.advisor.macro_calendar import macro_calendar
+            is_blackout, blackout_reason = await macro_calendar.is_blackout_active()
+            if is_blackout and not force:
+                return {"ok": False, "reject_reason": f"macro_blackout:{blackout_reason}"}
+
             can_pub, alloc_reason = self.allocation.can_publish(symbol)
             if not can_pub and not force:
                 return {"ok": False, "reject_reason": alloc_reason}
@@ -221,6 +227,13 @@ class AdvisorProcessor:
 
         if not force:
             self.allocation.record(symbol)
+
+        # Trigger Delta Exchange Execution
+        try:
+            from src.execution.executor import executor
+            await executor.execute_signal(signal)
+        except Exception as exc:
+            logger.error("Delta Execution hook failed: %s", exc)
 
         return {
             "ok": True,
