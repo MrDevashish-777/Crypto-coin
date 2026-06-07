@@ -32,9 +32,16 @@ export default function AnalyticsCharts({ signals }: AnalyticsChartsProps) {
 
   // Calculate Risk/Reward distribution for the last 15 closed trades
   const recentClosed = [...closedSignals].slice(0, 15).reverse().map((s, idx) => {
+    let parsedRR = 0;
+    if (typeof s.risk_reward === 'string' && s.risk_reward.includes(':')) {
+      parsedRR = Number(s.risk_reward.split(':')[1]);
+    } else {
+      parsedRR = !isNaN(Number(s.risk_reward)) ? Number(s.risk_reward) : 0;
+    }
+    
     return {
       name: s.symbol,
-      RR: !isNaN(Number(s.risk_reward)) ? Number(s.risk_reward) : 0,
+      RR: isNaN(parsedRR) ? 0 : parsedRR,
       outcome: s.status,
       fill: s.status === 'TP_HIT' ? '#10b981' : '#ef4444'
     };

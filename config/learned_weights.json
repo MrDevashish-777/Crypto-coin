@@ -1,0 +1,19 @@
+{
+    "supertrend": 0.135,
+    "ema_stack": 0.112,
+    "ichimoku": 0.112,
+    "nwe": 0.083,
+    "macd": 0.11,
+    "rsi": 0.11,
+    "volume_obv": 0.053,
+    "vwap": 0.025,
+    "bollinger": 0.021,
+    "stochastic": 0.049,
+    "cci": 0.012,
+    "williams_r": 0.012,
+    "heikin_ashi": 0.015,
+    "fib_level": 0.013,
+    "pivot_level": 0.049,
+    "smc": 0.15,
+    "candlestick": 0.073
+}

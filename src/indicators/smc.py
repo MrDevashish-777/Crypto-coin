@@ -13,12 +13,16 @@ class SMC(BaseIndicator):
     Identifies:
     1. Fair Value Gaps (FVG)
     2. Order Blocks (OB)
+    3. Liquidity Sweeps (Sweeps)
+    4. Change of Character (ChoCh)
     """
 
     def __init__(self, period: int = 14):
         super().__init__(period)
         self.fvgs = []
         self.order_blocks = []
+        self.sweeps = []
+        self.choch = []
 
     def calculate_from_ohlc(
         self,
@@ -30,13 +34,15 @@ class SMC(BaseIndicator):
     ) -> Dict[str, List[Dict]]:
         """
         Calculate SMC features.
-        Returns a dict of recent FVGs and OBs.
+        Returns a dict of recent FVGs, OBs, Sweeps, and ChoCh.
         """
-        if len(closes) < 3:
-            return {"fvgs": [], "order_blocks": []}
+        if len(closes) < 5:
+            return {"fvgs": [], "order_blocks": [], "sweeps": [], "choch": []}
 
         fvgs = []
         order_blocks = []
+        sweeps = []
+        choch = []
 
         # Calculate FVGs (requires 3 candles)
         # Bullish FVG: Low of candle 3 is higher than High of candle 1
@@ -102,12 +108,66 @@ class SMC(BaseIndicator):
                             })
                             break
 
+        # Detect Swing Highs and Lows for Sweeps & ChoCh
+        swing_highs = []
+        swing_lows = []
+        for i in range(2, len(closes) - 2):
+            if highs[i] > highs[i-1] and highs[i] > highs[i-2] and highs[i] > highs[i+1] and highs[i] > highs[i+2]:
+                swing_highs.append({"index": i, "price": highs[i]})
+            if lows[i] < lows[i-1] and lows[i] < lows[i-2] and lows[i] < lows[i+1] and lows[i] < lows[i+2]:
+                swing_lows.append({"index": i, "price": lows[i]})
+
+        # Detect Liquidity Sweeps
+        # A sweep happens when price wicks above a swing high but closes below it (Bearish Sweep / BSSL)
+        # Or wicks below a swing low but closes above it (Bullish Sweep / SSSL)
+        for i in range(5, len(closes)):
+            for sh in swing_highs:
+                if sh["index"] < i - 1 and highs[i] > sh["price"] and closes[i] < sh["price"]:
+                    sweeps.append({
+                        "type": "bearish_sweep",
+                        "price": sh["price"],
+                        "index": i,
+                        "active": True
+                    })
+            for sl in swing_lows:
+                if sl["index"] < i - 1 and lows[i] < sl["price"] and closes[i] > sl["price"]:
+                    sweeps.append({
+                        "type": "bullish_sweep",
+                        "price": sl["price"],
+                        "index": i,
+                        "active": True
+                    })
+
+        # Detect Change of Character (ChoCh)
+        # ChoCh happens when a recent swing high/low is broken with a solid close
+        for i in range(5, len(closes)):
+            for sh in swing_highs[-3:]:  # Check recent swing highs
+                if sh["index"] < i - 1 and closes[i] > sh["price"] and opens[i] < sh["price"]:
+                    choch.append({
+                        "type": "bullish_choch",
+                        "price": sh["price"],
+                        "index": i,
+                        "active": True
+                    })
+            for sl in swing_lows[-3:]:  # Check recent swing lows
+                if sl["index"] < i - 1 and closes[i] < sl["price"] and opens[i] > sl["price"]:
+                    choch.append({
+                        "type": "bearish_choch",
+                        "price": sl["price"],
+                        "index": i,
+                        "active": True
+                    })
+
         self.fvgs = fvgs
         self.order_blocks = order_blocks
+        self.sweeps = sweeps
+        self.choch = choch
 
         return {
             "fvgs": fvgs,
-            "order_blocks": order_blocks
+            "order_blocks": order_blocks,
+            "sweeps": sweeps,
+            "choch": choch
         }
 
     def calculate(self, closes: List[float]) -> List[float]:

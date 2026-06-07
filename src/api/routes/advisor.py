@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/api/v1/advisor",
     tags=["advisor"],
-    dependencies=[Depends(require_internal_api_key)],
 )
 
 _advisor_processor: Optional[AdvisorProcessor] = None
@@ -46,7 +45,7 @@ class GenerateRequest(BaseModel):
     force: bool = False
 
 
-@router.post("/generate")
+@router.post("/generate", dependencies=[Depends(require_internal_api_key)])
 async def generate_advisor_signal(body: GenerateRequest):
     """Generate one SOP-compliant signal + PDF for symbol/timeframe."""
     if body.symbol.upper() not in CRYPTO_PAIRS:
@@ -69,7 +68,7 @@ async def generate_advisor_signal(body: GenerateRequest):
     return result
 
 
-@router.post("/scan")
+@router.post("/scan", dependencies=[Depends(require_internal_api_key)])
 async def scan_advisor_universe(
     margin_currency: str | None = Query(None),
 ):
@@ -82,7 +81,7 @@ async def scan_advisor_universe(
     return {"scanned": len(results), "published": published, "results": results}
 
 
-@router.get("/reports/latest")
+@router.get("/reports/latest", dependencies=[Depends(require_internal_api_key)])
 async def list_latest_reports(limit: int = Query(20, ge=1, le=50)):
     """List recent PDF files from output directory."""
     out = settings.advisor_output_path
@@ -105,7 +104,7 @@ async def download_report(filename: str):
     return FileResponse(path, media_type="application/pdf", filename=safe)
 
 
-@router.get("/health")
+@router.get("/health", dependencies=[Depends(require_internal_api_key)])
 async def advisor_health():
     proc = await get_advisor_processor()
     ok = await proc.data_fetcher.test_connection()

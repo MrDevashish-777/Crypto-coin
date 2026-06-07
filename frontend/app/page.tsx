@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import SignalCard, { Signal } from '@/components/SignalCard';
-import Navbar, { TabType } from '@/components/Navbar';
-import StatsOverview from '@/components/StatsOverview';
-import AnalyticsCharts from '@/components/AnalyticsCharts';
-import styles from '@/components/SignalCard.module.css';
+import SignalCard, { Signal } from '../components/SignalCard';
+import Navbar, { TabType } from '../components/Navbar';
+import StatsOverview from '../components/StatsOverview';
+import AnalyticsCharts from '../components/AnalyticsCharts';
+import styles from '../components/SignalCard.module.css';
 
 export default function Home() {
   const [signals, setSignals] = useState<Signal[]>([]);

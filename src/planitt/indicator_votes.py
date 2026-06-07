@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal, Optional
+import json
+import os
 
 from config.settings import settings
 from src.data.models import CandleList
@@ -48,6 +50,21 @@ INDICATOR_WEIGHTS: dict[str, float] = {
     "smc": 0.04,
     "candlestick": settings.PATTERN_WEIGHT,
 }
+
+LEARNED_WEIGHTS_PATH = "config/learned_weights.json"
+
+def get_active_weights() -> dict[str, float]:
+    weights = INDICATOR_WEIGHTS.copy()
+    if os.path.exists(LEARNED_WEIGHTS_PATH):
+        try:
+            with open(LEARNED_WEIGHTS_PATH, "r") as f:
+                learned = json.load(f)
+                for k, v in learned.items():
+                    if isinstance(v, (int, float)):
+                        weights[k] = float(v)
+        except Exception as e:
+            print(f"Error loading learned weights: {e}")
+    return weights
 
 
 @dataclass(frozen=True)
@@ -286,10 +303,26 @@ def _nwe_vote(closes: list[float], *, expected_side: SignalSide) -> tuple[Option
     return "bear", strength
 
 
-def _smc_vote(opens, highs, lows, closes, volumes, price: float) -> tuple[Optional[str], float]:
+def _smc_vote(opens, highs, lows, closes, volumes, price: float) -> tuple[Optional[str], float, bool]:
     smc = SMC()
     data = smc.calculate_from_ohlc(opens, highs, lows, closes, volumes)
     tol = settings.PLANITT_TOUCH_TOLERANCE_PCT
+    
+    # Check for Sweeps & ChoCh (high priority, veto power)
+    for sweep in data.get("sweeps", []):
+        if sweep.get("active"):
+            if sweep["type"] == "bullish_sweep":
+                return "bull", 0.95, True
+            elif sweep["type"] == "bearish_sweep":
+                return "bear", 0.95, True
+                
+    for c in data.get("choch", []):
+        if c.get("active"):
+            if c["type"] == "bullish_choch":
+                return "bull", 0.90, True
+            elif c["type"] == "bearish_choch":
+                return "bear", 0.90, True
+
     for ob in reversed(data.get("order_blocks", [])[-5:]):
         if not ob.get("active"):
             continue
@@ -297,10 +330,10 @@ def _smc_vote(opens, highs, lows, closes, volumes, price: float) -> tuple[Option
         if abs(price - mid) / mid > tol:
             continue
         if ob["type"] == "bullish":
-            return "bull", 0.65
+            return "bull", 0.65, False
         if ob["type"] == "bearish":
-            return "bear", 0.65
-    return None, 0.0
+            return "bear", 0.65, False
+    return None, 0.0, False
 
 
 def _candlestick_vote(
@@ -347,6 +380,8 @@ def evaluate_indicator_votes(
     cs_dir, cs_score, _pattern = _candlestick_vote(
         opens, highs, lows, closes, volumes, key_level=key_level, ema50=ema50,
     )
+    
+    smc_dir, smc_score, smc_veto = _smc_vote(opens, highs, lows, closes, volumes, price)
 
     votes: dict[str, tuple[Optional[str], float]] = {
         "rsi": _rsi_vote(closes),
@@ -363,10 +398,20 @@ def evaluate_indicator_votes(
         "heikin_ashi": _heikin_vote(opens, highs, lows, closes),
         "fib_level": _fib_vote(highs, lows, closes, price),
         "pivot_level": _pivot_vote(highs, lows, closes, price),
-        "smc": _smc_vote(opens, highs, lows, closes, volumes, price),
+        "smc": (smc_dir, smc_score),
         "nwe": _nwe_vote(closes, expected_side=expected_side),
         "candlestick": (cs_dir, cs_score),
     }
+
+    # SMC Veto Logic
+    if smc_veto and smc_dir:
+        opposing_side = "bear" if smc_dir == "bull" else "bull"
+        if votes["macd"][0] == opposing_side:
+            votes["macd"] = (None, 0.0)
+        if votes["rsi"][0] == opposing_side:
+            votes["rsi"] = (None, 0.0)
+
+    active_weights = get_active_weights()
 
     bull_score = 0.0
     bear_score = 0.0
@@ -375,7 +420,7 @@ def evaluate_indicator_votes(
     hits: list[str] = []
 
     for name, (direction, score) in votes.items():
-        weight = INDICATOR_WEIGHTS.get(name, 0.05)
+        weight = active_weights.get(name, 0.05)
         if direction == "bull":
             bull_score += score * weight
             bull_sources += 1

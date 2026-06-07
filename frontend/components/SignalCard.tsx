@@ -11,9 +11,10 @@ export interface Signal {
   stop_loss: number;
   confidence_score: number;
   leverage: number;
-  risk_reward: number;
+  risk_reward: number | string;
   generated_at: string;
   cloudinary_pdf_url?: string;
+  pdf_path?: string;
 }
 
 export default function SignalCard({ signal, index }: { signal: Signal; index: number }) {
@@ -23,11 +24,24 @@ export default function SignalCard({ signal, index }: { signal: Signal; index: n
   // Format percentage for confidence bar
   const confidencePct = Math.round((Number(signal.confidence_score) || 0) * 100);
 
-  const parsedRR = Number(signal.risk_reward);
+  let parsedRR = 0;
+  if (typeof signal.risk_reward === 'string' && signal.risk_reward.includes(':')) {
+    parsedRR = Number(signal.risk_reward.split(':')[1]);
+  } else {
+    parsedRR = Number(signal.risk_reward);
+  }
   const displayRR = !isNaN(parsedRR) && signal.risk_reward != null ? parsedRR.toFixed(2) : 'N/A';
 
   // Stagger animation based on index
   const animationDelay = `${index * 0.05}s`;
+
+  let downloadUrl = signal.cloudinary_pdf_url;
+  if (!downloadUrl && signal.pdf_path) {
+    const filename = signal.pdf_path.split('/').pop() || signal.pdf_path.split('\\').pop();
+    if (filename) {
+      downloadUrl = `http://localhost:8003/api/v1/advisor/reports/${filename}`;
+    }
+  }
 
   return (
     <div 
@@ -77,9 +91,9 @@ export default function SignalCard({ signal, index }: { signal: Signal; index: n
         </div>
       </div>
       
-      {signal.cloudinary_pdf_url && (
+      {downloadUrl && (
         <a 
-          href={signal.cloudinary_pdf_url} 
+          href={downloadUrl} 
           target="_blank" 
           rel="noopener noreferrer"
           className={styles.downloadBtn}

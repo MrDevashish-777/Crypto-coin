@@ -269,15 +269,19 @@ def compute_advisor_levels(
         sl_pct = sop["min_sl_pct"]
         if side == "BUY":
             stop_loss = entry_mid * (1 - sl_pct / 100.0)
+            target = max(target, entry_mid + abs(entry_mid - stop_loss) * min_rr)
         else:
             stop_loss = entry_mid * (1 + sl_pct / 100.0)
+            target = min(target, entry_mid - abs(stop_loss - entry_mid) * min_rr)
 
     if sl_pct > sop["max_sl_pct"]:
         sl_pct = sop["max_sl_pct"]
         if side == "BUY":
             stop_loss = entry_mid * (1 - sl_pct / 100.0)
+            target = max(target, entry_mid + abs(entry_mid - stop_loss) * min_rr)
         else:
             stop_loss = entry_mid * (1 + sl_pct / 100.0)
+            target = min(target, entry_mid - abs(stop_loss - entry_mid) * min_rr)
 
     leverage = 20.0 / sl_pct
     leveraged_sl = sl_pct * leverage

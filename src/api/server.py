@@ -164,6 +164,8 @@ def create_app() -> FastAPI:
         if settings.ENABLE_BACKGROUND_SCANNER:
             logger.info("Starting advisor background scanner...")
             asyncio.create_task(advisor_market_scanner())
+            logger.info("Starting reinforcement learning background optimizer...")
+            asyncio.create_task(advisor_weight_optimizer())
         else:
             logger.info("Background scanner disabled (ENABLE_BACKGROUND_SCANNER=false)")
 
@@ -190,6 +192,27 @@ def create_app() -> FastAPI:
                 logger.exception("Advisor scanner error: %s", exc)
             try:
                 await asyncio.wait_for(shutdown_event.wait(), timeout=scan_interval)
+            except asyncio.TimeoutError:
+                pass
+
+    async def advisor_weight_optimizer():
+        from src.analysis.learning_engine import WeightOptimizer
+        optimizer = WeightOptimizer()
+        # Initial wait so we don't block immediate startup
+        try:
+            await asyncio.wait_for(shutdown_event.wait(), timeout=300)
+        except asyncio.TimeoutError:
+            pass
+            
+        while not shutdown_event.is_set():
+            try:
+                logger.info("Weight optimizer: running RL tuning loop...")
+                await optimizer.run_optimization(days=30)
+            except Exception as exc:
+                logger.exception("Weight optimizer error: %s", exc)
+            try:
+                # Run once a day (86400 seconds)
+                await asyncio.wait_for(shutdown_event.wait(), timeout=86400)
             except asyncio.TimeoutError:
                 pass
 
