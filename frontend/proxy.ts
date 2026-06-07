@@ -3,7 +3,6 @@ import type { NextRequest } from 'next/server';
 
 export function proxy(req: NextRequest) {
   const basicAuth = req.headers.get('authorization');
-  const url = req.nextUrl;
 
   // Read credentials from env
   const authUsername = process.env.AUTH_USERNAME || 'admin';

@@ -22,14 +22,15 @@ export default function Home() {
       setSignals(data.signals || []);
       setLastUpdated(new Date());
       setError(null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // eslint-disable-next-line
     fetchSignals();
 
     // Auto-refresh every 30 seconds

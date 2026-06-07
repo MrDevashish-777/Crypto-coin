@@ -31,7 +31,7 @@ export default function AnalyticsCharts({ signals }: AnalyticsChartsProps) {
   const COLORS = ['#10b981', '#ef4444'];
 
   // Calculate Risk/Reward distribution for the last 15 closed trades
-  const recentClosed = [...closedSignals].slice(0, 15).reverse().map((s, idx) => {
+  const recentClosed = [...closedSignals].slice(0, 15).reverse().map((s) => {
     let parsedRR = 0;
     if (typeof s.risk_reward === 'string' && s.risk_reward.includes(':')) {
       parsedRR = Number(s.risk_reward.split(':')[1]);

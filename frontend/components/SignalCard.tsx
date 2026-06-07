@@ -19,7 +19,6 @@ export interface Signal {
 
 export default function SignalCard({ signal, index }: { signal: Signal; index: number }) {
   const isBuy = signal.direction === 'BUY';
-  const entryAvg = signal.entry_range ? (signal.entry_range[0] + signal.entry_range[1]) / 2 : 0;
   
   // Format percentage for confidence bar
   const confidencePct = Math.round((Number(signal.confidence_score) || 0) * 100);
