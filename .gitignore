@@ -82,3 +82,6 @@ secrets.yaml
 /private/
 .zencoder/
 .zenflow/
+
+# Un-ignore Next.js frontend lib folder
+!frontend/lib/
