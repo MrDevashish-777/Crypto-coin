@@ -1,16 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --background-start: #0f172a;
-  --background-end: #020617;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --accent: #3b82f6;
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --background-start: #040510;
+  --background-end: #0a0b16;
+  --text-primary: #ffffff;
+  --text-secondary: #8c9cb6;
+  --accent: #6d28d9;
+  --accent-light: #a78bfa;
+  --glass-bg: rgba(25, 25, 45, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.6);
   --success: #10b981;
-  --danger: #ef4444;
+  --danger: #f43f5e;
 }
 
 * {
@@ -20,48 +21,98 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Outfit', sans-serif;
   color: var(--text-primary);
-  background: linear-gradient(135deg, var(--background-start), var(--background-end));
+  background-color: var(--background-start);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  position: relative;
 }
 
+/* Deep Space Ambient Animation */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  background-repeat: no-repeat;
+}
+
+body::before {
+  /* Purple nebula */
+  background: radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.25), transparent 50%);
+  animation: nebulaDrift 20s ease-in-out infinite alternate;
+}
+
+body::after {
+  /* Blue galaxy */
+  background: radial-gradient(circle at 85% 30%, rgba(30, 58, 138, 0.2), transparent 50%);
+  animation: nebulaDrift2 25s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes nebulaDrift {
+  0% { transform: scale(1) translate(0px, 0px); }
+  50% { transform: scale(1.2) translate(5vw, -5vh); }
+  100% { transform: scale(1) translate(-2vw, 8vh); }
+}
+
+@keyframes nebulaDrift2 {
+  0% { transform: scale(1) translate(0px, 0px); }
+  50% { transform: scale(1.3) translate(-8vw, 10vh); }
+  100% { transform: scale(0.9) translate(4vw, -6vh); }
+}
+
+/* Stardust overlay overlay */
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2rem 1.5rem;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .header {
   text-align: center;
-  margin-bottom: 3rem;
-  animation: fadeInDown 0.8s ease-out;
+  margin-bottom: 2.5rem;
+  padding-top: 1rem;
 }
 
 .header h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  background: linear-gradient(to right, #60a5fa, #a78bfa);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(to right, #e2e8f0, #a78bfa, #3b82f6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 0.5rem;
+  filter: drop-shadow(0 4px 24px rgba(167, 139, 250, 0.2));
 }
 
 .header p {
   color: var(--text-secondary);
-  font-size: 1.1rem;
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  font-weight: 400;
 }
 
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Global scrollbar styling for modern look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }

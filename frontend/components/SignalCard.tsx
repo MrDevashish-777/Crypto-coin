@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import styles from './SignalCard.module.css';
 
 export interface Signal {
@@ -19,6 +20,7 @@ export interface Signal {
 
 export default function SignalCard({ signal, index }: { signal: Signal; index: number }) {
   const isBuy = signal.direction === 'BUY';
+  const isOpen = signal.status === 'OPEN';
   
   // Format percentage for confidence bar
   const confidencePct = Math.round((Number(signal.confidence_score) || 0) * 100);
@@ -31,9 +33,6 @@ export default function SignalCard({ signal, index }: { signal: Signal; index: n
   }
   const displayRR = !isNaN(parsedRR) && signal.risk_reward != null ? parsedRR.toFixed(2) : 'N/A';
 
-  // Stagger animation based on index
-  const animationDelay = `${index * 0.05}s`;
-
   let downloadUrl = signal.cloudinary_pdf_url;
   if (!downloadUrl && signal.pdf_path) {
     const filename = signal.pdf_path.split('/').pop() || signal.pdf_path.split('\\').pop();
@@ -43,12 +42,23 @@ export default function SignalCard({ signal, index }: { signal: Signal; index: n
   }
 
   return (
-    <div 
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        type: 'spring', 
+        stiffness: 260, 
+        damping: 20, 
+        delay: index * 0.05 
+      }}
+      whileHover={{ y: -5, scale: 1.02 }}
       className={`${styles.card} ${isBuy ? styles.buy : styles.sell}`}
-      style={{ animationDelay }}
     >
       <div className={styles.header}>
-        <div className={styles.symbol}>{signal.symbol}</div>
+        <div className={styles.symbolGroup}>
+          <div className={styles.symbol}>{signal.symbol}</div>
+          {isOpen && <div className={styles.livePulse} title="Live Signal" />}
+        </div>
         <div className={styles.status}>{signal.status}</div>
         <div className={`${styles.direction} ${isBuy ? styles.buy : styles.sell}`}>
           {signal.direction}
@@ -82,9 +92,11 @@ export default function SignalCard({ signal, index }: { signal: Signal; index: n
         <div className={styles.confidence}>
           <span>Conf {confidencePct}%</span>
           <div className={styles.confidenceBar}>
-            <div 
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${confidencePct}%` }}
+              transition={{ delay: 0.3 + (index * 0.05), duration: 0.8, ease: "easeOut" }}
               className={styles.confidenceFill} 
-              style={{ width: `${confidencePct}%` }}
             />
           </div>
         </div>
@@ -100,6 +112,6 @@ export default function SignalCard({ signal, index }: { signal: Signal; index: n
           Download PDF Report
         </a>
       )}
-    </div>
+    </motion.div>
   );
 }
