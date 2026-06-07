@@ -155,6 +155,9 @@ class Settings(BaseSettings):
     FASTAPI_CORS_ORIGINS_RAW: str = os.getenv("FASTAPI_CORS_ORIGINS", "*")
     FASTAPI_TRUSTED_HOSTS_RAW: str = os.getenv("FASTAPI_TRUSTED_HOSTS", "*")
 
+    # Cloudinary Integration
+    CLOUDINARY_URL: Optional[str] = os.getenv("CLOUDINARY_URL")
+
     # Logging
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

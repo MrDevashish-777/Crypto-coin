@@ -51,6 +51,7 @@ class AdvisorSignal(BaseModel):
 
     pdf_path: Optional[str] = None
     chart_path: Optional[str] = None
+    cloudinary_pdf_url: Optional[str] = None
 
     @field_validator("indicators")
     @classmethod

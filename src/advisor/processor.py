@@ -220,6 +220,23 @@ class AdvisorProcessor:
         signal.pdf_path = str(pdf_path)
         signal.chart_path = str(chart_path)
 
+        if settings.CLOUDINARY_URL:
+            try:
+                import cloudinary
+                import cloudinary.uploader
+                import asyncio
+                cloudinary.config(cloudinary_url=settings.CLOUDINARY_URL)
+                
+                upload_res = await asyncio.to_thread(
+                    cloudinary.uploader.upload,
+                    str(pdf_path),
+                    resource_type="auto"
+                )
+                signal.cloudinary_pdf_url = upload_res.get("secure_url")
+                logger.info("Cloudinary PDF uploaded: %s", signal.cloudinary_pdf_url)
+            except Exception as exc:
+                logger.warning("Cloudinary PDF upload failed: %s", exc)
+
         try:
             await persist_advisor_signal(signal)
         except Exception as exc:

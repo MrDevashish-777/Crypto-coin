@@ -42,6 +42,7 @@ def build_advisor_document(signal: AdvisorSignal) -> dict[str, Any]:
         "reason_monitor": signal.reason_monitor,
         "pdf_path": signal.pdf_path,
         "chart_path": signal.chart_path,
+        "cloudinary_pdf_url": signal.cloudinary_pdf_url,
         "review_status": "AUTO_PUBLISHED",
         "status": "OPEN",
         "outcome": "open",
