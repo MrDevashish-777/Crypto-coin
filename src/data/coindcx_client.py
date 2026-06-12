@@ -220,28 +220,30 @@ class CoinDCXClient:
             return _aggregate_candles(raw, 4)[-limit:]
         raise ValueError(f"No aggregation path for timeframe {timeframe}")
 
-    async def _fetch_rest_candles(
-        self,
-        pair: str,
-        resolution: str,
-        limit: int,
-    ) -> list[Candle]:
-        await self._init_session()
-        assert self._session is not None
-
-        tf_seconds = {
+    @staticmethod
+    def _resolution_seconds(resolution: str) -> int:
+        return {
             "1": 60,
             "5": 300,
             "60": 3600,
             "1D": 86400,
         }.get(resolution, 3600)
-        now_s = int(datetime.now(timezone.utc).timestamp())
-        from_s = now_s - (limit + 5) * tf_seconds
+
+    async def _fetch_rest_candles_range(
+        self,
+        pair: str,
+        resolution: str,
+        from_s: int,
+        to_s: int,
+    ) -> list[Candle]:
+        """Fetch candles for an explicit UTC unix-second window."""
+        await self._init_session()
+        assert self._session is not None
 
         params = {
             "pair": pair,
             "from": from_s,
-            "to": now_s,
+            "to": to_s,
             "resolution": resolution,
             "pcode": "f",
         }
@@ -294,10 +296,91 @@ class CoinDCXClient:
                 if c:
                     candles.append(c)
             candles.sort(key=lambda c: c.timestamp)
-            logger.debug("Fetched %d candles for %s res=%s", len(candles), pair, resolution)
+            logger.debug(
+                "Fetched %d candles for %s res=%s (%d-%d)",
+                len(candles),
+                pair,
+                resolution,
+                from_s,
+                to_s,
+            )
             return candles
 
         raise CoinDCXAPIError("Failed after retries")
+
+    async def _fetch_rest_candles(
+        self,
+        pair: str,
+        resolution: str,
+        limit: int,
+    ) -> list[Candle]:
+        tf_seconds = self._resolution_seconds(resolution)
+        now_s = int(datetime.now(timezone.utc).timestamp())
+        from_s = now_s - (limit + 5) * tf_seconds
+        return await self._fetch_rest_candles_range(pair, resolution, from_s, now_s)
+
+    async def get_klines_range(
+        self,
+        pair: str,
+        timeframe: str,
+        start: datetime,
+        end: datetime,
+        *,
+        margin_currency: str | None = None,
+        max_bars_per_request: int = 500,
+    ) -> list[Candle]:
+        """
+        Fetch historical OHLCV between start and end (UTC), paginating REST requests.
+        """
+        if timeframe not in TIMEFRAME_SECONDS:
+            raise ValueError(f"Unsupported timeframe: {timeframe}")
+
+        start_utc = start.astimezone(timezone.utc)
+        end_utc = end.astimezone(timezone.utc)
+        if start_utc >= end_utc:
+            return []
+
+        rest_res = COINDCX_REST_RESOLUTION.get(timeframe)
+        if rest_res is None:
+            raise ValueError(f"No REST resolution for timeframe: {timeframe}")
+
+        aggregate_factor = 1
+        if timeframe == "15m" and rest_res == "5":
+            aggregate_factor = 3
+        elif timeframe == "4h" and rest_res == "60":
+            aggregate_factor = 4
+
+        tf_seconds = TIMEFRAME_SECONDS[timeframe]
+        raw_tf_seconds = self._resolution_seconds(rest_res)
+        chunk_seconds = raw_tf_seconds * max_bars_per_request
+
+        from_s = int(start_utc.timestamp())
+        to_s = int(end_utc.timestamp())
+        merged: dict[int, Candle] = {}
+
+        cursor = from_s
+        while cursor < to_s:
+            chunk_to = min(cursor + chunk_seconds, to_s)
+            raw = await self._fetch_rest_candles_range(pair, rest_res, cursor, chunk_to)
+            if aggregate_factor > 1:
+                raw = _aggregate_candles(raw, aggregate_factor)
+            for c in raw:
+                if from_s * 1000 <= c.timestamp <= to_s * 1000:
+                    merged[c.timestamp] = c
+            if chunk_to >= to_s:
+                break
+            cursor = chunk_to + raw_tf_seconds
+
+        out = sorted(merged.values(), key=lambda c: c.timestamp)
+        logger.info(
+            "Historical fetch %s %s: %d bars (%s -> %s)",
+            pair,
+            timeframe,
+            len(out),
+            start_utc.date(),
+            end_utc.date(),
+        )
+        return out
 
     async def get_latest_price(self, pair: str) -> float:
         """Return latest close from 1m candles."""

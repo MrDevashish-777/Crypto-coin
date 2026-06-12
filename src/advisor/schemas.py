@@ -49,6 +49,9 @@ class AdvisorSignal(BaseModel):
     reason_entry: str
     reason_monitor: str
 
+    composite_score: float = Field(default=0.0, ge=0.0)
+    quality_tier: Literal["A", "B", "C"] = "C"
+
     pdf_path: Optional[str] = None
     chart_path: Optional[str] = None
     cloudinary_pdf_url: Optional[str] = None

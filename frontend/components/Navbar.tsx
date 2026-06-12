@@ -10,9 +10,9 @@ interface NavbarProps {
 }
 
 const TABS = [
-  { id: 'OPEN', label: 'Open Signals', icon: Activity },
-  { id: 'CLOSED', label: 'Closed Signals', icon: CheckCircle },
-  { id: 'ANALYTICS', label: 'Analytics', icon: BarChart2 },
+  { id: 'OPEN', label: 'Active Missions', icon: Activity },
+  { id: 'CLOSED', label: 'Mission Log', icon: CheckCircle },
+  { id: 'ANALYTICS', label: 'Orbital Data', icon: BarChart2 },
 ] as const;
 
 export default function Navbar({ activeTab, onTabChange }: NavbarProps) {

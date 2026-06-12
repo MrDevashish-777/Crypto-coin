@@ -1,0 +1,14 @@
+{
+    "_comment": "SOP-aligned crypto futures indicator weights — trend/structure/momentum/volume priority",
+    "supertrend": 0.160,
+    "ema_stack": 0.140,
+    "ichimoku": 0.120,
+    "smc": 0.140,
+    "macd": 0.100,
+    "rsi": 0.100,
+    "volume_obv": 0.080,
+    "vwap": 0.050,
+    "nwe": 0.050,
+    "pivot_level": 0.060,
+    "candlestick": 0.050
+}

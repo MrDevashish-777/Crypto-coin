@@ -58,7 +58,22 @@ class Settings(BaseSettings):
     ADVISOR_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_MIN_AGREEING_SOURCES", "4"))
     ADVISOR_MIN_VOTE_MARGIN: float = float(os.getenv("ADVISOR_MIN_VOTE_MARGIN", "0.15"))
     ADVISOR_SYMBOL_COOLDOWN_HOURS: int = int(os.getenv("ADVISOR_SYMBOL_COOLDOWN_HOURS", "6"))
-    ADVISOR_SCAN_TIMEFRAMES_RAW: str = os.getenv("ADVISOR_SCAN_TIMEFRAMES", "15m,1h,4h,1d")
+    ADVISOR_SCAN_TIMEFRAMES_RAW: str = os.getenv("ADVISOR_SCAN_TIMEFRAMES", "1h,4h,1d")
+    ADVISOR_BACKTEST_QUALITY_GATE_ENABLED: bool = (
+        os.getenv("ADVISOR_BACKTEST_QUALITY_GATE_ENABLED", "false").lower() == "true"
+    )
+    ADVISOR_BACKTEST_MIN_EXPECTANCY: float = float(
+        os.getenv("ADVISOR_BACKTEST_MIN_EXPECTANCY", "0.0")
+    )
+    ADVISOR_QUALITY_TIER_A_MIN: float = float(os.getenv("ADVISOR_QUALITY_TIER_A_MIN", "0.88"))
+    ADVISOR_QUALITY_TIER_B_MIN: float = float(os.getenv("ADVISOR_QUALITY_TIER_B_MIN", "0.78"))
+    ADVISOR_MIN_COMPOSITE_SCORE: float = float(os.getenv("ADVISOR_MIN_COMPOSITE_SCORE", "0.82"))
+    ADVISOR_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_MIN_MTF_SCORE", "0.75"))
+    ADVISOR_PUBLISH_MIN_QUALITY_TIER: str = os.getenv("ADVISOR_PUBLISH_MIN_QUALITY_TIER", "B").upper()
+    ADVISOR_MTF_SCORE_WEIGHT: float = float(os.getenv("ADVISOR_MTF_SCORE_WEIGHT", "0.20"))
+    ADVISOR_BLOCK_NEGATIVE_BUCKETS: bool = (
+        os.getenv("ADVISOR_BLOCK_NEGATIVE_BUCKETS", "true").lower() == "true"
+    )
     CHART_RENDERER: str = os.getenv("CHART_RENDERER", "matplotlib")  # matplotlib | playwright
 
     # LLM (optional narrative for PDFs)
@@ -95,7 +110,7 @@ class Settings(BaseSettings):
     PLANITT_RANGING_MIN_DI_SPREAD: float = float(os.getenv("PLANITT_RANGING_MIN_DI_SPREAD", "1.5"))
     PLANITT_RELAX_MOMENTUM: bool = os.getenv("PLANITT_RELAX_MOMENTUM", "true").lower() == "true"
     PLANITT_MIN_HITS_STRONG_ADX: int = int(os.getenv("PLANITT_MIN_HITS_STRONG_ADX", "2"))
-    PLANITT_MTF_MIN_AGREEING: int = int(os.getenv("PLANITT_MTF_MIN_AGREEING", "1"))
+    PLANITT_MTF_MIN_AGREEING: int = int(os.getenv("PLANITT_MTF_MIN_AGREEING", "2"))
     PLANITT_MTF_ALLOW_RANGING_HTF: bool = os.getenv("PLANITT_MTF_ALLOW_RANGING_HTF", "true").lower() == "true"
     PLANITT_ALLOW_TREND_CONTINUATION: bool = (
         os.getenv("PLANITT_ALLOW_TREND_CONTINUATION", "true").lower() == "true"
@@ -105,7 +120,10 @@ class Settings(BaseSettings):
         os.getenv("PLANITT_OPPOSING_PATTERN_VETO_STRENGTH", "0.70")
     )
     PLANITT_REQUIRE_MANDATORY_CATEGORIES: bool = (
-        os.getenv("PLANITT_REQUIRE_MANDATORY_CATEGORIES", "false").lower() == "true"
+        os.getenv("PLANITT_REQUIRE_MANDATORY_CATEGORIES", "true").lower() == "true"
+    )
+    PLANITT_ALLOW_REVERSAL_SETUPS: bool = (
+        os.getenv("PLANITT_ALLOW_REVERSAL_SETUPS", "false").lower() == "true"
     )
     ENABLE_CANDLESTICK_PATTERNS: bool = os.getenv("ENABLE_CANDLESTICK_PATTERNS", "true").lower() == "true"
     PATTERN_MIN_STRENGTH: float = float(os.getenv("PATTERN_MIN_STRENGTH", "0.60"))
@@ -126,7 +144,7 @@ class Settings(BaseSettings):
 
     # SOP trading parameters (env-configurable)
     SOP_MIN_SL_PCT: float = float(os.getenv("SOP_MIN_SL_PCT", "2.5"))
-    SOP_MAX_SL_PCT: float = float(os.getenv("SOP_MAX_SL_PCT", "4.0"))
+    SOP_MAX_SL_PCT: float = float(os.getenv("SOP_MAX_SL_PCT", "3.0"))
     SOP_MIN_RR: float = float(os.getenv("SOP_MIN_RR", "1.5"))
     SOP_HIGH_CONF_MIN_RR: float = float(os.getenv("SOP_HIGH_CONF_MIN_RR", "1.8"))
     SOP_HIGH_CONF_THRESHOLD: float = float(os.getenv("SOP_HIGH_CONF_THRESHOLD", "0.85"))

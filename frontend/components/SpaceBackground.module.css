@@ -1,0 +1,210 @@
+.space {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 0%, #0a0b1a 0%, #03030a 45%, #000000 100%);
+}
+
+.starsCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.nebulaPurple {
+  position: absolute;
+  top: -15%;
+  left: -10%;
+  width: 60vw;
+  height: 60vw;
+  max-width: 800px;
+  max-height: 800px;
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.22) 0%, rgba(147, 51, 234, 0.1) 40%, transparent 70%);
+  filter: blur(45px);
+  animation: nebulaDrift 28s ease-in-out infinite alternate;
+}
+
+.nebulaCyan {
+  position: absolute;
+  bottom: -5%;
+  right: -5%;
+  width: 50vw;
+  height: 50vw;
+  max-width: 700px;
+  max-height: 700px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, rgba(34, 211, 238, 0.05) 45%, transparent 70%);
+  filter: blur(55px);
+  animation: nebulaDrift2 32s ease-in-out infinite alternate-reverse;
+}
+
+/* Moon */
+.moon {
+  position: absolute;
+  top: 6%;
+  right: 8%;
+  width: clamp(72px, 10vw, 110px);
+  height: clamp(72px, 10vw, 110px);
+}
+
+.moonGlow {
+  position: absolute;
+  inset: -40%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(226, 232, 240, 0.12) 0%, transparent 65%);
+  animation: moonPulse 6s ease-in-out infinite;
+}
+
+.moonBody {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f8fafc 0%, #cbd5e1 35%, #94a3b8 70%, #64748b 100%);
+  box-shadow:
+    inset -8px -6px 16px rgba(0, 0, 0, 0.35),
+    0 0 40px rgba(226, 232, 240, 0.15),
+    0 0 80px rgba(148, 163, 184, 0.08);
+}
+
+.crater1,
+.crater2,
+.crater3 {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(100, 116, 139, 0.35);
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.crater1 {
+  width: 18%;
+  height: 18%;
+  top: 28%;
+  left: 22%;
+}
+
+.crater2 {
+  width: 12%;
+  height: 12%;
+  top: 55%;
+  left: 48%;
+}
+
+.crater3 {
+  width: 10%;
+  height: 10%;
+  top: 38%;
+  left: 58%;
+}
+
+/* Astronaut */
+.astronaut {
+  position: absolute;
+  bottom: 8%;
+  left: 5%;
+  width: clamp(100px, 14vw, 160px);
+  height: clamp(100px, 14vw, 160px);
+  animation: floatAstro 12s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(34, 211, 238, 0.15));
+}
+
+.astroBody {
+  animation: subtleRotate 16s ease-in-out infinite alternate;
+  transform-origin: 50px 50px;
+}
+
+.astronautImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: subtleRotate 16s ease-in-out infinite alternate;
+  transform-origin: center center;
+}
+
+@keyframes floatAstro {
+  0%, 100% { transform: translateY(0) translateX(0) rotate(0deg); }
+  33% { transform: translateY(-15px) translateX(8px) rotate(2deg); }
+  66% { transform: translateY(5px) translateX(-5px) rotate(-1deg); }
+}
+
+@keyframes subtleRotate {
+  0% { transform: rotate(-5deg); }
+  100% { transform: rotate(5deg); }
+}
+
+/* Shooting stars */
+.shootingStar,
+.shootingStar2 {
+  position: absolute;
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), transparent);
+  border-radius: 2px;
+  transform: rotate(-35deg);
+  opacity: 0;
+}
+
+.shootingStar {
+  top: 18%;
+  left: 30%;
+  animation: shoot 8s ease-in-out infinite;
+}
+
+.shootingStar2 {
+  top: 42%;
+  right: 25%;
+  width: 80px;
+  animation: shoot 12s ease-in-out 4s infinite;
+}
+
+@keyframes nebulaDrift {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(6vw, 4vh) scale(1.15); }
+}
+
+@keyframes nebulaDrift2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-5vw, -3vh) scale(1.1); }
+}
+
+@keyframes moonPulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes shoot {
+  0%, 85%, 100% { opacity: 0; transform: rotate(-35deg) translateX(0); }
+  88% { opacity: 1; }
+  95% { opacity: 0; transform: rotate(-35deg) translateX(180px); }
+}
+
+@media (max-width: 768px) {
+  .moon {
+    top: 4%;
+    right: 4%;
+    width: 56px;
+    height: 56px;
+  }
+
+  .blackHole {
+    bottom: 4%;
+    left: 2%;
+    width: 80px;
+    height: 80px;
+    opacity: 0.7;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nebulaPurple,
+  .nebulaCyan,
+  .moonGlow,
+  .accretionRing,
+  .accretionRingInner,
+  .shootingStar,
+  .shootingStar2 {
+    animation: none;
+  }
+}

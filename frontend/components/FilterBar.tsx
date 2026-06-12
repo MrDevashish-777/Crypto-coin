@@ -17,14 +17,15 @@ export default function FilterBar({
   return (
     <div className={styles.container}>
       <div className={styles.searchWrapper}>
-        <Search className={styles.searchIcon} size={18} />
+        <div className={styles.hudPrefix}>&gt;_</div>
         <input
           type="text"
           className={styles.input}
-          placeholder="Search by symbol (e.g., BTC)..."
+          placeholder="Scan sector — enter symbol (e.g. BTC)..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
         />
+        <Search className={styles.searchIcon} size={16} />
       </div>
       <select
         className={styles.filterSelect}

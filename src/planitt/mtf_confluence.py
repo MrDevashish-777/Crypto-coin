@@ -98,7 +98,7 @@ def check_htf_alignment(
             htf_details=(),
         )
 
-    min_agree = max(1, settings.PLANITT_MTF_MIN_AGREEING)
+    min_agree = min(len(htfs), max(1, settings.PLANITT_MTF_MIN_AGREEING))
     detector = MarketRegimeDetector()
     details: list[str] = []
     scores: list[float] = []

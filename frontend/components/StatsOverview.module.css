@@ -1,97 +1,123 @@
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
   margin-bottom: 2rem;
   width: 100%;
 }
 
 .statCard {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  padding: 1.35rem;
   box-shadow: var(--glass-shadow);
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  gap: 1rem;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  animation: slideUp 0.5s ease-out backwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.statCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.4), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
 .statCard:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-3px);
+  border-color: var(--glass-border-bright);
+  box-shadow: var(--glass-shadow), var(--glass-glow);
+}
+
+.statCard:hover::before {
+  opacity: 1;
 }
 
 .iconWrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
   flex-shrink: 0;
+  border: 1px solid transparent;
 }
 
 .iconWrapper.blue {
-  color: #60a5fa;
-  background: rgba(59, 130, 246, 0.15);
-  box-shadow: 0 4px 20px -5px rgba(59, 130, 246, 0.4);
+  color: var(--cosmic-cyan);
+  background: var(--cosmic-cyan-dim);
+  border-color: rgba(34, 211, 238, 0.2);
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.15);
 }
 
 .iconWrapper.green {
-  color: #34d399;
-  background: rgba(16, 185, 129, 0.15);
-  box-shadow: 0 4px 20px -5px rgba(16, 185, 129, 0.4);
+  color: var(--success);
+  background: var(--success-dim);
+  border-color: rgba(52, 211, 153, 0.2);
+  box-shadow: 0 0 24px rgba(52, 211, 153, 0.12);
 }
 
 .iconWrapper.red {
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.15);
-  box-shadow: 0 4px 20px -5px rgba(239, 68, 68, 0.4);
+  color: var(--danger);
+  background: var(--danger-dim);
+  border-color: rgba(248, 113, 113, 0.2);
+  box-shadow: 0 0 24px rgba(248, 113, 113, 0.1);
 }
 
 .iconWrapper.purple {
-  color: #a78bfa;
-  background: rgba(139, 92, 246, 0.15);
-  box-shadow: 0 4px 20px -5px rgba(139, 92, 246, 0.4);
+  color: var(--nebula-purple);
+  background: var(--nebula-purple-dim);
+  border-color: rgba(168, 85, 247, 0.2);
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.12);
 }
 
 .content {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .label {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.25rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.2rem;
 }
 
 .value {
-  font-size: 2rem;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
   color: var(--text-primary);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Mobile Adjustments */
 @media (max-width: 600px) {
   .grid {
-    grid-template-columns: repeat(2, 1fr); /* 2x2 grid on standard phones */
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
   .statCard {
     padding: 1rem;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 0.65rem;
   }
   .iconWrapper {
     width: 40px;
@@ -102,13 +128,13 @@
     height: 20px;
   }
   .value {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 }
 
 @media (max-width: 360px) {
   .grid {
-    grid-template-columns: 1fr; /* Stack vertically on very tiny screens */
+    grid-template-columns: 1fr;
   }
   .statCard {
     flex-direction: row;

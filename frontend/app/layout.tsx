@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
+import SpaceBackground from '../components/SpaceBackground';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Crypto Signals Dashboard',
-  description: 'Premium AI-driven cryptocurrency trading signals',
+  title: 'Nebula Signals — Cosmic Trading Intelligence',
+  description: 'AI-driven cryptocurrency trading signals from the edge of the market universe',
 };
 
 export default function RootLayout({
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <SpaceBackground />
+        <div className="appShell">{children}</div>
+      </body>
     </html>
   );
 }

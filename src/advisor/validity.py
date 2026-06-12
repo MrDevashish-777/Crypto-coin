@@ -24,10 +24,11 @@ def compute_valid_until(
     *,
     generated_at: datetime | None = None,
     swing_days: int = 3,
+    timeframe: str = "1h",
 ) -> datetime:
     """
-    Intraday: valid until 23:59 IST next calendar day.
-    Swing: valid swing_days (2-7 cap) ending 23:59 IST on final day.
+    SOP §6 — Intraday: valid until 23:59 IST the next calendar day.
+    Swing: 2-7 days ending 23:59 IST on the final day.
     """
     start = (generated_at or now_ist()).astimezone(IST)
     if trade_horizon == "intraday":

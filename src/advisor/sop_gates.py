@@ -50,6 +50,9 @@ def validate_levels(
     if sl_pct < settings.SOP_MIN_SL_PCT - 0.01 or tp_pct < settings.SOP_MIN_SL_PCT - 0.01:
         return SOPValidationResult(False, f"tp_sl_pct_too_tight:sl={sl_pct} tp={tp_pct}")
 
+    if sl_pct > settings.SOP_MAX_SL_PCT + 0.15:
+        return SOPValidationResult(False, f"sl_pct_above_sop_max:{sl_pct}")
+
     lev_sl = sl_pct * leverage
     if lev_sl < settings.SOP_LEVERAGED_SL_MIN - 0.5 or lev_sl > settings.SOP_LEVERAGED_SL_MAX + 0.5:
         return SOPValidationResult(False, f"leveraged_sl_{lev_sl:.1f}")

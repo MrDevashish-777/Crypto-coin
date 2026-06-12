@@ -3,6 +3,8 @@ LLM Agent for Market Analysis
 Integrates with OpenAI, Anthropic, or local Ollama
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from typing import Optional, Dict, Any

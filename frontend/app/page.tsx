@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import SignalCard, { Signal } from '../components/SignalCard';
+import SignalCard from '../components/SignalCard';
+import SignalDetailModal from '../components/SignalDetailModal';
 import Navbar, { TabType } from '../components/Navbar';
 import FilterBar from '../components/FilterBar';
 import StatsOverview from '../components/StatsOverview';
 import AnalyticsCharts from '../components/AnalyticsCharts';
+import { HeroSpline } from '../components/HeroSpline';
+import type { Signal } from '../types/signal';
 import styles from '../components/SignalCard.module.css';
 
 export default function Home() {
@@ -17,6 +20,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('OPEN');
   const [searchQuery, setSearchQuery] = useState('');
   const [directionFilter, setDirectionFilter] = useState<'ALL' | 'BUY' | 'SELL'>('ALL');
+  const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
 
   const fetchSignals = async () => {
     try {
@@ -37,7 +41,6 @@ export default function Home() {
     // eslint-disable-next-line
     fetchSignals();
 
-    // Auto-refresh every 30 seconds
     const intervalId = setInterval(() => {
       fetchSignals();
     }, 30000);
@@ -45,31 +48,29 @@ export default function Home() {
     return () => clearInterval(intervalId);
   }, []);
 
-  // Apply filters
   const filteredSignals = signals.filter((s) => {
     const matchesSearch = s.symbol.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDirection = directionFilter === 'ALL' || s.direction === directionFilter;
     return matchesSearch && matchesDirection;
   });
 
-  // Split filtered signals into open and closed
-  const openSignals = filteredSignals.filter(s => s.status === 'OPEN');
-  const closedSignals = filteredSignals.filter(s => s.status === 'TP_HIT' || s.status === 'SL_HIT' || s.status === 'CLOSED');
+  const openSignals = filteredSignals.filter((s) => s.status === 'OPEN');
+  const closedSignals = filteredSignals.filter(
+    (s) =>
+      s.status === 'TP_HIT' ||
+      s.status === 'SL_HIT' ||
+      s.status === 'CLOSED' ||
+      s.status === 'EXPIRED'
+  );
 
   return (
     <div className="container">
-      <header className="header">
-        <h1>Crypto Signals</h1>
-        <p>Professional AI-driven trading analytics</p>
-        <p style={{ fontSize: '0.8rem', marginTop: '10px', color: 'var(--text-secondary)' }}>
-          Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : '...'}
-        </p>
-      </header>
+      <HeroSpline />
 
       <Navbar activeTab={activeTab} onTabChange={setActiveTab} />
 
       {(activeTab === 'OPEN' || activeTab === 'CLOSED') && (
-        <FilterBar 
+        <FilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           directionFilter={directionFilter}
@@ -77,27 +78,20 @@ export default function Home() {
         />
       )}
 
-      {error && (
-        <div style={{ color: 'var(--danger)', textAlign: 'center', marginBottom: '2rem' }}>
-          {error}
-        </div>
-      )}
+      {error && <div className="errorBanner">{error}</div>}
 
       {loading && signals.length === 0 ? (
-        <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-          Loading dashboard...
-        </div>
+        <div className="loadingState">Scanning the signal universe…</div>
       ) : (
         <AnimatePresence mode="wait">
-          <motion.div 
+          <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
             style={{ width: '100%' }}
           >
-            
             {activeTab === 'ANALYTICS' && (
               <>
                 <StatsOverview signals={signals} />
@@ -108,12 +102,15 @@ export default function Home() {
             {activeTab === 'OPEN' && (
               <div className={styles.grid}>
                 {openSignals.length === 0 ? (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                    No open signals found.
-                  </div>
+                  <div className="emptyState">No active signals in this sector of the market.</div>
                 ) : (
                   openSignals.map((signal, idx) => (
-                    <SignalCard key={signal._id || signal.signal_id} signal={signal} index={idx} />
+                    <SignalCard
+                      key={signal._id || signal.signal_id}
+                      signal={signal}
+                      index={idx}
+                      onSelect={setSelectedSignal}
+                    />
                   ))
                 )}
               </div>
@@ -122,20 +119,24 @@ export default function Home() {
             {activeTab === 'CLOSED' && (
               <div className={styles.grid}>
                 {closedSignals.length === 0 ? (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                    No closed signals found.
-                  </div>
+                  <div className="emptyState">No completed missions logged yet.</div>
                 ) : (
                   closedSignals.map((signal, idx) => (
-                    <SignalCard key={signal._id || signal.signal_id} signal={signal} index={idx} />
+                    <SignalCard
+                      key={signal._id || signal.signal_id}
+                      signal={signal}
+                      index={idx}
+                      onSelect={setSelectedSignal}
+                    />
                   ))
                 )}
               </div>
             )}
-
           </motion.div>
         </AnimatePresence>
       )}
+
+      <SignalDetailModal signal={selectedSignal} onClose={() => setSelectedSignal(null)} />
     </div>
   );
 }

@@ -454,6 +454,8 @@ def evaluate_confluence_pre_gates_with_reason(
             last_pivot_low = piv_lows[-1][1]
             near_level = abs(price - last_pivot_low) / last_pivot_low <= touch_tolerance_pct
             if near_level:
+                if not settings.PLANITT_ALLOW_REVERSAL_SETUPS:
+                    return ConfluenceEvaluation(features=None, reject_reason="reversal_setup_blocked")
                 confluence_hits.append("key_level_reaction_reversal")
                 setup_type = "support_resistance_reversal"
                 key_level = last_pivot_low
@@ -461,6 +463,8 @@ def evaluate_confluence_pre_gates_with_reason(
             last_pivot_high = piv_highs[-1][1]
             near_level = abs(price - last_pivot_high) / last_pivot_high <= touch_tolerance_pct
             if near_level:
+                if not settings.PLANITT_ALLOW_REVERSAL_SETUPS:
+                    return ConfluenceEvaluation(features=None, reject_reason="reversal_setup_blocked")
                 confluence_hits.append("key_level_reaction_reversal")
                 setup_type = "support_resistance_reversal"
                 key_level = last_pivot_high

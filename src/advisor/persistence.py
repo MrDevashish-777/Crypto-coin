@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from src.advisor.schemas import AdvisorSignal
+from src.data.models import CandleList
 from src.database.db import get_db
 from src.planitt.mongo_collections import crypto_signals_collection
 
@@ -43,6 +44,8 @@ def build_advisor_document(signal: AdvisorSignal) -> dict[str, Any]:
         "pdf_path": signal.pdf_path,
         "chart_path": signal.chart_path,
         "cloudinary_pdf_url": signal.cloudinary_pdf_url,
+        "composite_score": signal.composite_score,
+        "quality_tier": signal.quality_tier,
         "review_status": "AUTO_PUBLISHED",
         "status": "OPEN",
         "outcome": "open",
@@ -60,6 +63,19 @@ async def persist_advisor_signal(signal: AdvisorSignal) -> str:
     )
     logger.info("Persisted advisor signal %s", signal.signal_id)
     return signal.signal_id
+
+
+async def has_open_advisor_signal(symbol: str) -> bool:
+    """Check if there is an existing OPEN advisor signal for a symbol."""
+    db = await get_db()
+    coll = db[crypto_signals_collection()]
+    count = await coll.count_documents({
+        "source_backend": "coindcx_advisor",
+        "symbol": symbol.upper(),
+        "status": "OPEN",
+    })
+    return count > 0
+
 
 
 async def load_weekly_publish_records() -> list[dict[str, str]]:
@@ -89,7 +105,7 @@ async def load_weekly_publish_records() -> list[dict[str, str]]:
     return records
 
 
-async def close_advisor_signals(symbol: str, latest_price: float) -> int:
+async def close_advisor_signals(symbol: str, latest_price: float, candle_list: CandleList | None = None) -> int:
     """Close open advisor signals when TP/SL is hit."""
     db = await get_db()
     coll = db[crypto_signals_collection()]
@@ -108,28 +124,92 @@ async def close_advisor_signals(symbol: str, latest_price: float) -> int:
         entry = (float(entry_range[0]) + float(entry_range[1])) / 2.0
         tp = float(doc.get("target") or 0.0)
         sl = float(doc.get("stop_loss") or 0.0)
+        valid_until_str = doc.get("valid_until_ist")
         status = "OPEN"
         outcome = "open"
+        
+        is_expired = False
+        if valid_until_str:
+            try:
+                valid_until = datetime.fromisoformat(valid_until_str.replace("Z", "+00:00"))
+                if now > valid_until:
+                    is_expired = True
+            except Exception:
+                pass
 
-        if direction == "BUY":
-            if latest_price >= tp:
-                status = "TP_HIT"
-                outcome = "tp_hit"
-            elif latest_price <= sl:
-                status = "SL_HIT"
-                outcome = "sl_hit"
-        elif direction == "SELL":
-            if latest_price <= tp:
-                status = "TP_HIT"
-                outcome = "tp_hit"
-            elif latest_price >= sl:
-                status = "SL_HIT"
-                outcome = "sl_hit"
+        generated_at_str = doc.get("generated_at")
+        generated_ts = 0
+        if generated_at_str:
+            try:
+                dt = datetime.fromisoformat(generated_at_str.replace("Z", "+00:00"))
+                generated_ts = int(dt.timestamp() * 1000)
+            except Exception:
+                pass
+
+        hit_tp = False
+        hit_sl = False
+        hit_price = latest_price
+
+        # 1. Replay historical candles to catch hits during server downtime
+        if candle_list is not None and generated_ts > 0:
+            for candle in candle_list.candles:
+                if candle.timestamp >= generated_ts:
+                    if direction == "BUY":
+                        if candle.high >= tp:
+                            hit_tp = True
+                            hit_price = tp
+                            break
+                        if candle.low <= sl:
+                            hit_sl = True
+                            hit_price = sl
+                            break
+                    else:
+                        if candle.low <= tp:
+                            hit_tp = True
+                            hit_price = tp
+                            break
+                        if candle.high >= sl:
+                            hit_sl = True
+                            hit_price = sl
+                            break
+
+        # 2. If not hit in replay, check the live instantaneous price
+        if not hit_tp and not hit_sl:
+            if direction == "BUY":
+                if latest_price >= tp:
+                    hit_tp = True
+                    hit_price = latest_price
+                elif latest_price <= sl:
+                    hit_sl = True
+                    hit_price = latest_price
+            elif direction == "SELL":
+                if latest_price <= tp:
+                    hit_tp = True
+                    hit_price = latest_price
+                elif latest_price >= sl:
+                    hit_sl = True
+                    hit_price = latest_price
+
+        if hit_tp:
+            status = "TP_HIT"
+            outcome = "tp_hit"
+        elif hit_sl:
+            status = "SL_HIT"
+            outcome = "sl_hit"
+
+        if status == "OPEN" and is_expired:
+            status = "EXPIRED"
+            outcome = "expired"
 
         if status != "OPEN":
             risk = abs(entry - sl)
-            reward = abs(latest_price - entry)
-            pnl_r = (reward / risk) if risk > 0 else None
+            reward_diff = (hit_price - entry) if direction == "BUY" else (entry - hit_price)
+            pnl_r = (reward_diff / risk) if risk > 0 else None
+            
+            # Cap pnl_r at -1 for SL hits to normalize risk 
+            if status == "SL_HIT" and pnl_r is not None and pnl_r < -1.0:
+                pnl_r = -1.0
+
             await coll.update_one(
                 {"signal_id": doc["signal_id"]},
                 {

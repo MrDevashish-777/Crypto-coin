@@ -16,6 +16,7 @@ from src.advisor.persistence import (
     close_advisor_signals,
     load_weekly_publish_records,
     persist_advisor_signal,
+    has_open_advisor_signal,
 )
 from src.advisor.schemas import AdvisorSignal
 from src.advisor.sop_gates import validate_levels
@@ -23,6 +24,7 @@ from src.advisor.targets import compute_advisor_levels
 from src.advisor.validity import compute_valid_until, infer_trade_horizon, now_ist
 from src.data.data_fetcher import DataFetcher
 from src.llm.agent import LLMAgentFactory
+from src.analysis.backtest_config import get_bucket_expectancy, passes_quality_tier, quality_tier
 from src.planitt.confluence import ConfluenceFeatures, evaluate_confluence_pre_gates_with_reason
 from src.planitt.mtf_confluence import check_htf_alignment, higher_timeframes_for
 
@@ -77,7 +79,31 @@ class AdvisorProcessor:
 
     @staticmethod
     def _composite_score(features: ConfluenceFeatures) -> float:
-        return features.pre_confidence + (features.mtf_score * 0.15)
+        return features.pre_confidence + (features.mtf_score * settings.ADVISOR_MTF_SCORE_WEIGHT)
+
+    def _passes_publish_quality(
+        self,
+        features: ConfluenceFeatures,
+        composite_score: float,
+        tier: str,
+        symbol: str,
+        timeframe: str,
+    ) -> tuple[bool, str | None]:
+        if composite_score < settings.ADVISOR_MIN_COMPOSITE_SCORE:
+            return False, f"composite_below_{composite_score:.2f}"
+        if features.mtf_score < settings.ADVISOR_MIN_MTF_SCORE:
+            return False, f"mtf_below_{features.mtf_score:.2f}"
+        if not passes_quality_tier(tier, settings.ADVISOR_PUBLISH_MIN_QUALITY_TIER):
+            return False, f"quality_tier_{tier}"
+        if settings.ADVISOR_BLOCK_NEGATIVE_BUCKETS:
+            bucket_exp = get_bucket_expectancy(symbol, timeframe)
+            if bucket_exp is not None and bucket_exp < 0:
+                return False, f"negative_bucket_{bucket_exp:.3f}"
+        if settings.ADVISOR_BACKTEST_QUALITY_GATE_ENABLED:
+            bucket_exp = get_bucket_expectancy(symbol, timeframe)
+            if bucket_exp is not None and bucket_exp < settings.ADVISOR_BACKTEST_MIN_EXPECTANCY:
+                return False, f"backtest_bucket_expectancy_{bucket_exp:.3f}"
+        return True, None
 
     async def generate_signal(
         self,
@@ -116,12 +142,16 @@ class AdvisorProcessor:
             )
             live_price = await self.data_fetcher.get_current_price(symbol, self.margin_currency)
             try:
-                await close_advisor_signals(symbol, live_price)
+                await close_advisor_signals(symbol, live_price, candle_list=candle_list)
             except Exception as exc:
                 logger.debug("Outcome closure skipped for %s: %s", symbol, exc)
         except Exception as exc:
             logger.warning("Data fetch failed for %s: %s", symbol, exc)
             return {"ok": False, "reject_reason": f"data_error:{exc}"}
+
+        if not force:
+            if await has_open_advisor_signal(symbol):
+                return {"ok": False, "reject_reason": "active_open_signal_exists"}
 
         evaluation = evaluate_confluence_pre_gates_with_reason(
             candle_list,
@@ -147,7 +177,7 @@ class AdvisorProcessor:
                 "reject_reason": f"confidence_{features.pre_confidence:.2f}",
             }
 
-        levels = compute_advisor_levels(features, candle_list=candle_list)
+        levels = compute_advisor_levels(features, candle_list=candle_list, live_price=live_price)
         sop = validate_levels(
             direction=features.side,
             entry_low=float(levels["entry_low"]),
@@ -165,10 +195,17 @@ class AdvisorProcessor:
             return {"ok": False, "reject_reason": sop.reason}
 
         composite_score = self._composite_score(features)
+        tier = quality_tier(composite_score)
+        ok_quality, quality_reason = self._passes_publish_quality(
+            features, composite_score, tier, symbol, timeframe
+        )
+        if not ok_quality and not force:
+            return {"ok": False, "reject_reason": quality_reason}
         if dry_run:
             return {
                 "ok": True,
                 "composite_score": composite_score,
+                "quality_tier": tier,
                 "features": features,
                 "levels": levels,
                 "live_price": live_price,
@@ -185,7 +222,9 @@ class AdvisorProcessor:
 
         trade_horizon = infer_trade_horizon(timeframe)
         generated_at = datetime.now(timezone.utc)
-        valid_until = compute_valid_until(trade_horizon, generated_at=now_ist())
+        valid_until = compute_valid_until(
+            trade_horizon, generated_at=now_ist(), timeframe=timeframe
+        )
 
         signal = AdvisorSignal(
             pair=pair,
@@ -209,6 +248,8 @@ class AdvisorProcessor:
             indicators=list(levels.get("chart_indicators", []))[:2],
             setup_type=features.setup_type,
             confluence_hits=list(features.confluence_hits),
+            composite_score=composite_score,
+            quality_tier=tier,
             reason_why_token=why,
             reason_entry=entry_reason,
             reason_monitor=monitor,
@@ -222,15 +263,18 @@ class AdvisorProcessor:
 
         if settings.CLOUDINARY_URL:
             try:
+                import os
+                import asyncio
+                os.environ["CLOUDINARY_URL"] = settings.CLOUDINARY_URL
                 import cloudinary
                 import cloudinary.uploader
-                import asyncio
-                cloudinary.config(cloudinary_url=settings.CLOUDINARY_URL)
+                cloudinary.reset_config()
                 
                 upload_res = await asyncio.to_thread(
                     cloudinary.uploader.upload,
                     str(pdf_path),
-                    resource_type="auto"
+                    resource_type="raw",
+                    format="pdf",
                 )
                 signal.cloudinary_pdf_url = upload_res.get("secure_url")
                 logger.info("Cloudinary PDF uploaded: %s", signal.cloudinary_pdf_url)
@@ -265,12 +309,12 @@ class AdvisorProcessor:
         symbols: list[str] | None = None,
         timeframes: list[str] | None = None,
     ) -> list[dict[str, Any]]:
-        """Scan symbols × timeframes; publish highest-scoring candidate per symbol."""
+        """Scan symbols × timeframes; publish globally highest-scoring quality candidates."""
         await self._ensure_allocation()
         syms = symbols or list(CRYPTO_PAIRS.keys())
         tfs = timeframes or settings.advisor_scan_timeframes
         results: list[dict[str, Any]] = []
-        best_by_symbol: dict[str, tuple[float, str, dict[str, Any]]] = {}
+        candidates: list[tuple[float, str, str, dict[str, Any]]] = []
         reject_counts: dict[str, int] = {}
 
         for tf in tfs:
@@ -282,18 +326,15 @@ class AdvisorProcessor:
                     reject_counts[reason] = reject_counts.get(reason, 0) + 1
                     continue
                 score = float(out.get("composite_score", 0.0))
-                prev = best_by_symbol.get(sym)
-                if prev is None or score > prev[0]:
-                    best_by_symbol[sym] = (score, tf, out)
+                candidates.append((score, sym, tf, out))
 
-        ranked = sorted(
-            ((sym, score, tf, out) for sym, (score, tf, out) in best_by_symbol.items()),
-            key=lambda item: item[1],
-            reverse=True,
-        )
+        ranked = sorted(candidates, key=lambda item: item[0], reverse=True)
 
         published = 0
-        for sym, _score, tf, _out in ranked:
+        published_symbols: set[str] = set()
+        for _score, sym, tf, _out in ranked:
+            if sym in published_symbols:
+                continue
             recent = self.allocation.recent_publishes()
             if len(recent) >= settings.MAX_WEEKLY_SIGNALS:
                 logger.info("Weekly cap reached (%d)", settings.MAX_WEEKLY_SIGNALS)
@@ -306,6 +347,7 @@ class AdvisorProcessor:
             results.append({"symbol": sym, "timeframe": tf, "phase": "publish", **pub})
             if pub.get("ok"):
                 published += 1
+                published_symbols.add(sym)
                 logger.info("Published advisor signal %s %s (ranked scan)", sym, tf)
             else:
                 logger.info(

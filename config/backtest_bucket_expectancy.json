@@ -1,0 +1,8 @@
+{
+  "BTC_1h": {"expectancy": 0.085, "win_rate_pct": 40.9, "net_r": 21.18, "trades": 150},
+  "BTC_4h": {"expectancy": 1.59, "win_rate_pct": 100.0, "net_r": 3.18, "trades": 2},
+  "ETH_1h": {"expectancy": 0.014, "win_rate_pct": 38.8, "net_r": 2.05, "trades": 147},
+  "ETH_4h": {"expectancy": -1.0, "win_rate_pct": 0.0, "net_r": -1.0, "trades": 1},
+  "SOL_1h": {"expectancy": 0.097, "win_rate_pct": 40.6, "net_r": 13.34, "trades": 138},
+  "SOL_4h": {"expectancy": -1.0, "win_rate_pct": 0.0, "net_r": -6.0, "trades": 6}
+}

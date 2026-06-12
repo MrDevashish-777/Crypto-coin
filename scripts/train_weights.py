@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 async def main():
     optimizer = WeightOptimizer()
     print("Starting Reinforcement Learning Weight Tuning...")
-    await optimizer.run_optimization(days=30)
+    await optimizer.run_optimization(days=30, include_backtest_log=True)
     print("Optimization finished successfully.")
 
 if __name__ == "__main__":

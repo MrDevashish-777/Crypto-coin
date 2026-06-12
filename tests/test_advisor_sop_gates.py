@@ -14,9 +14,9 @@ def test_validate_levels_buy_ok() -> None:
         target=106.0,
         live_price=100.5,
         sl_pct=2.5,
-        tp_pct=5.5,
+        tp_pct=3.0,
         leverage=8.0,
-        risk_reward="1:2.0",
+        risk_reward="1:1.5",
         confidence=0.82,
     )
     assert result.ok

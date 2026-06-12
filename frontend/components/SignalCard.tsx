@@ -1,113 +1,139 @@
 import { motion } from 'framer-motion';
+import type { Signal } from '../types/signal';
+import {
+  formatGeneratedAt,
+  getPdfDownloadInfo,
+  parseRiskReward,
+} from '../lib/signalUtils';
 import styles from './SignalCard.module.css';
 
-export interface Signal {
-  _id: string;
-  signal_id: string;
-  symbol: string;
-  direction: 'BUY' | 'SELL';
-  status: string;
-  entry_range: number[];
-  target: number;
-  stop_loss: number;
-  confidence_score: number;
-  leverage: number;
-  risk_reward: number | string;
-  generated_at: string;
-  cloudinary_pdf_url?: string;
-  pdf_path?: string;
+interface SignalCardProps {
+  signal: Signal;
+  index: number;
+  onSelect?: (signal: Signal) => void;
 }
 
-export default function SignalCard({ signal, index }: { signal: Signal; index: number }) {
+export default function SignalCard({ signal, index, onSelect }: SignalCardProps) {
   const isBuy = signal.direction === 'BUY';
   const isOpen = signal.status === 'OPEN';
-  
-  // Format percentage for confidence bar
+
   const confidencePct = Math.round((Number(signal.confidence_score) || 0) * 100);
+  const displayRR = parseRiskReward(signal.risk_reward);
+  const pdfInfo = getPdfDownloadInfo(signal);
+  const generated = signal.generated_at ? formatGeneratedAt(signal.generated_at) : null;
 
-  let parsedRR = 0;
-  if (typeof signal.risk_reward === 'string' && signal.risk_reward.includes(':')) {
-    parsedRR = Number(signal.risk_reward.split(':')[1]);
-  } else {
-    parsedRR = Number(signal.risk_reward);
-  }
-  const displayRR = !isNaN(parsedRR) && signal.risk_reward != null ? parsedRR.toFixed(2) : 'N/A';
+  const handleCardClick = () => {
+    onSelect?.(signal);
+  };
 
-  let downloadUrl = signal.cloudinary_pdf_url;
-  if (!downloadUrl && signal.pdf_path) {
-    const filename = signal.pdf_path.split('/').pop() || signal.pdf_path.split('\\').pop();
-    if (filename) {
-      downloadUrl = `http://localhost:8003/api/v1/advisor/reports/${filename}`;
-    }
-  }
+  const handleDownloadClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        type: 'spring', 
-        stiffness: 260, 
-        damping: 20, 
-        delay: index * 0.05 
+      transition={{
+        type: 'spring',
+        stiffness: 260,
+        damping: 20,
+        delay: index * 0.05,
       }}
       whileHover={{ y: -5, scale: 1.02 }}
-      className={`${styles.card} ${isBuy ? styles.buy : styles.sell}`}
+      className={`${styles.card} ${isBuy ? styles.buy : styles.sell} ${onSelect ? styles.clickable : ''}`}
+      onClick={handleCardClick}
+      role={onSelect ? 'button' : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      onKeyDown={
+        onSelect
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect(signal);
+              }
+            }
+          : undefined
+      }
     >
       <div className={styles.header}>
         <div className={styles.symbolGroup}>
-          <div className={styles.symbol}>{signal.symbol}</div>
-          {isOpen && <div className={styles.livePulse} title="Live Signal" />}
+          <div>
+            <div className={styles.symbolRow}>
+              <div className={styles.symbol}>{signal.symbol}</div>
+              {isOpen && <div className={styles.livePulse} title="Live Signal" />}
+            </div>
+            {generated && (
+              <div className={styles.generatedAt} title={generated.absolute}>
+                {generated.relative} · {generated.absolute}
+              </div>
+            )}
+          </div>
         </div>
-        <div className={styles.status}>{signal.status}</div>
-        <div className={`${styles.direction} ${isBuy ? styles.buy : styles.sell}`}>
-          {signal.direction}
+        <div className={styles.badges}>
+          {signal.quality_tier && (
+            <span className={`${styles.tier} ${styles[`tier${signal.quality_tier}`]}`}>
+              Tier {signal.quality_tier}
+            </span>
+          )}
+          <div className={styles.status}>{signal.status}</div>
+          <div className={`${styles.direction} ${isBuy ? styles.buy : styles.sell}`}>
+            {signal.direction}
+          </div>
         </div>
       </div>
 
-      <div className={styles.row}>
-        <span className={styles.label}>Entry</span>
-        <span className={styles.value}>
-          {signal.entry_range ? `${signal.entry_range[0]} - ${signal.entry_range[1]}` : 'N/A'}
-        </span>
-      </div>
-
-      <div className={styles.row}>
-        <span className={styles.label}>Target</span>
-        <span className={`${styles.value} ${styles.target}`}>{signal.target}</span>
-      </div>
-
-      <div className={styles.row}>
-        <span className={styles.label}>Stop Loss</span>
-        <span className={`${styles.value} ${styles.stop}`}>{signal.stop_loss}</span>
-      </div>
-
-      <div className={styles.row}>
-        <span className={styles.label}>Leverage</span>
-        <span className={styles.value}>{signal.leverage}x</span>
+      <div className={styles.trajectoryContainer}>
+        <div className={styles.trajectoryTop}>
+          <span className={styles.trajLeverage}>Lev: {signal.leverage}x</span>
+          <span className={styles.trajRR}>RR: {displayRR}</span>
+        </div>
+        
+        <div className={styles.trajectoryBar}>
+          <div className={styles.trajPoint}>
+            <span className={styles.trajLabel}>SL</span>
+            <span className={`${styles.trajValue} ${styles.stop}`}>{signal.stop_loss}</span>
+          </div>
+          <div className={`${styles.trajLine} ${isBuy ? styles.trajLineBuy : styles.trajLineSell}`} />
+          <div className={styles.trajPoint}>
+            <span className={styles.trajLabel}>Entry</span>
+            <span className={styles.trajValue}>
+              {signal.entry_range ? `${signal.entry_range[0]}` : 'N/A'}
+            </span>
+          </div>
+          <div className={`${styles.trajLine} ${isBuy ? styles.trajLineBuy : styles.trajLineSell}`} />
+          <div className={styles.trajPoint}>
+            <span className={styles.trajLabel}>TP</span>
+            <span className={`${styles.trajValue} ${styles.target}`}>{signal.target}</span>
+          </div>
+        </div>
       </div>
 
       <div className={styles.footer}>
-        <span>RR: {displayRR}</span>
         <div className={styles.confidence}>
           <span>Conf {confidencePct}%</span>
           <div className={styles.confidenceBar}>
-            <motion.div 
+            <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${confidencePct}%` }}
-              transition={{ delay: 0.3 + (index * 0.05), duration: 0.8, ease: "easeOut" }}
-              className={styles.confidenceFill} 
+              transition={{ delay: 0.3 + index * 0.05, duration: 0.8, ease: 'easeOut' }}
+              className={styles.confidenceFill}
             />
           </div>
         </div>
       </div>
-      
-      {downloadUrl && (
-        <a 
-          href={downloadUrl} 
-          target="_blank" 
+
+      {onSelect && (
+        <div className={styles.viewDetails}>Open mission briefing →</div>
+      )}
+
+      {pdfInfo.url && (
+        <a
+          href={pdfInfo.url}
+          target="_blank"
           rel="noopener noreferrer"
           className={styles.downloadBtn}
+          onClick={handleDownloadClick}
         >
           Download PDF Report
         </a>

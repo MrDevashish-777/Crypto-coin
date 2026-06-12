@@ -27,6 +27,24 @@ def _sop_constants() -> dict[str, float]:
     }
 
 
+def _anchor_entry_band(price: float, entry_low: float, entry_high: float) -> tuple[float, float]:
+    """Recenter entry band on live price while respecting SOP width bounds."""
+    low, high = sorted([entry_low, entry_high])
+    if low <= price <= high:
+        return low, high
+    half = max((high - low) / 2.0, price * 0.0025)
+    half = min(half, price * 0.0075)
+    new_low, new_high = price - half, price + half
+    width_pct = (new_high - new_low) / price * 100.0
+    if width_pct < 0.5:
+        half = price * 0.0025
+        new_low, new_high = price - half, price + half
+    elif width_pct > 1.5:
+        half = price * 0.0075
+        new_low, new_high = price - half, price + half
+    return new_low, new_high
+
+
 def _entry_band(price: float, atr: float, *, setup_type: str, key_level: float, direction: Direction) -> tuple[float, float]:
     """Entry range 0.5–1.5% width centered near current structure."""
     mid = price
@@ -159,6 +177,7 @@ def compute_advisor_levels(
     features: ConfluenceFeatures,
     *,
     candle_list: Optional[CandleList] = None,
+    live_price: Optional[float] = None,
 ) -> dict[str, float | str | list[float]]:
     """
     Compute entry band, single SL/TP, and SOP percentages using adaptive risk + structure.
@@ -166,7 +185,7 @@ def compute_advisor_levels(
     sop = _sop_constants()
     side = features.side
     direction: Direction = "long" if side == "BUY" else "short"
-    price = float(features.price)
+    price = float(live_price if live_price is not None else features.price)
     atr = max(float(features.atr or 0.0), price * 0.0008)
     horizon = "swing" if features.timeframe in ("4h", "1d") else "intraday"
 
@@ -325,6 +344,9 @@ def compute_advisor_levels(
     if len(chart_indicators) < 2 and features.adx is not None:
         chart_indicators.append("ADX 14")
     chart_indicators = chart_indicators[:2]
+
+    entry_low, entry_high = _anchor_entry_band(price, entry_low, entry_high)
+    entry_mid = (entry_low + entry_high) / 2.0
 
     return {
         "entry_low": round(entry_low, 8),
