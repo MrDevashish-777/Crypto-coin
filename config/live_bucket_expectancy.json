@@ -1,0 +1,583 @@
+{
+  "INJ_15m": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.8,
+    "expectancy": 1.8,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "SOL_15m": {
+    "wins": 2,
+    "losses": 0,
+    "net_r": 3.0,
+    "expectancy": 1.5,
+    "win_rate_pct": 100.0,
+    "trades": 2
+  },
+  "XRP_15m": {
+    "wins": 2,
+    "losses": 0,
+    "net_r": 3.387,
+    "expectancy": 1.694,
+    "win_rate_pct": 100.0,
+    "trades": 2
+  },
+  "ATOM_15m": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.5,
+    "expectancy": 1.5,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "LINK_15m": {
+    "wins": 1,
+    "losses": 1,
+    "net_r": 0.5,
+    "expectancy": 0.25,
+    "win_rate_pct": 50.0,
+    "trades": 2
+  },
+  "TIA_15m": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.5,
+    "expectancy": 1.5,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "XRP_4h": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.674,
+    "expectancy": 1.674,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "OP_15m": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.74,
+    "expectancy": 1.74,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "BNB_15m": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "ETH_15m": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "DOGE_15m": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "BCH_15m": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.8,
+    "expectancy": 1.8,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "AVAX_15m": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.8,
+    "expectancy": 1.8,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "POL_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "BCH_1d": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "ATOM_1d": {
+    "wins": 0,
+    "losses": 2,
+    "net_r": -2.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 2
+  },
+  "FIL_15m": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "ARB_15m": {
+    "wins": 2,
+    "losses": 0,
+    "net_r": 3.3,
+    "expectancy": 1.65,
+    "win_rate_pct": 100.0,
+    "trades": 2
+  },
+  "BTC_15m": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "SUI_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "INJ_1h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "RUNE_15m": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "BTC_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "DOT_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "ARB_1d": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "FIL_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "AAVE_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "BNB_1d": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "LINK_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "DOGE_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "UNI_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "OP_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "SOL_1h": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.5,
+    "expectancy": 1.5,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "ADA_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "AVAX_4h": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "INJ_15m_BUY": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.8,
+    "expectancy": 1.8,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "SOL_15m_BUY": {
+    "wins": 2,
+    "losses": 0,
+    "net_r": 3.0,
+    "expectancy": 1.5,
+    "win_rate_pct": 100.0,
+    "trades": 2
+  },
+  "XRP_15m_BUY": {
+    "wins": 2,
+    "losses": 0,
+    "net_r": 3.387,
+    "expectancy": 1.694,
+    "win_rate_pct": 100.0,
+    "trades": 2
+  },
+  "ATOM_15m_BUY": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.5,
+    "expectancy": 1.5,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "LINK_15m_BUY": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.5,
+    "expectancy": 1.5,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "TIA_15m_BUY": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.5,
+    "expectancy": 1.5,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "XRP_4h_SELL": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.674,
+    "expectancy": 1.674,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "OP_15m_SELL": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.74,
+    "expectancy": 1.74,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "BNB_15m_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "ETH_15m_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "DOGE_15m_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "BCH_15m_SELL": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.8,
+    "expectancy": 1.8,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "AVAX_15m_SELL": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.8,
+    "expectancy": 1.8,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "POL_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "BCH_1d_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "LINK_15m_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "ATOM_1d_SELL": {
+    "wins": 0,
+    "losses": 2,
+    "net_r": -2.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 2
+  },
+  "FIL_15m_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "ARB_15m_SELL": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.5,
+    "expectancy": 1.5,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "BTC_15m_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "SUI_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "ARB_15m_BUY": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.8,
+    "expectancy": 1.8,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "INJ_1h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "RUNE_15m_BUY": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "BTC_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "DOT_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "ARB_1d_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "FIL_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "AAVE_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "BNB_1d_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "LINK_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "DOGE_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "UNI_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "OP_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "SOL_1h_BUY": {
+    "wins": 1,
+    "losses": 0,
+    "net_r": 1.5,
+    "expectancy": 1.5,
+    "win_rate_pct": 100.0,
+    "trades": 1
+  },
+  "ADA_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "AVAX_4h_SELL": {
+    "wins": 0,
+    "losses": 1,
+    "net_r": -1.0,
+    "expectancy": -1.0,
+    "win_rate_pct": 0.0,
+    "trades": 1
+  },
+  "_meta": {
+    "updated_at": "2026-06-16T07:25:42.709837+00:00",
+    "source": "mongodb_coindcx_advisor",
+    "closed_tp_sl": 40
+  }
+}

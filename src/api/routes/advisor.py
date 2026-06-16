@@ -109,9 +109,13 @@ async def advisor_health():
     proc = await get_advisor_processor()
     ok = await proc.data_fetcher.test_connection()
     recent = proc.allocation.recent_publishes()
+    daily = proc.allocation.recent_daily_publishes()
     return {
         "coindcx": ok,
         "weekly_published": len(recent),
         "weekly_cap": settings.MAX_WEEKLY_SIGNALS,
+        "daily_published": len(daily),
+        "daily_cap": settings.MAX_DAILY_SIGNALS,
+        "daily_target": settings.ADVISOR_TARGET_DAILY_SIGNALS,
         "margin": proc.margin_currency,
     }

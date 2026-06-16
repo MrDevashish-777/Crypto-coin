@@ -7,21 +7,21 @@ import { Spotlight } from "@/components/ui/spotlight"
 export function HeroSpline() {
   return (
     <Card 
-      className="w-full min-h-[500px] md:h-[600px] bg-[rgba(10,15,30,0.6)] backdrop-blur-xl relative overflow-hidden border border-[rgba(34,211,238,0.2)] rounded-[2.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex flex-col md:flex-row items-center"
+      className="w-full min-h-[400px] md:h-[500px] bg-[rgba(10,15,30,0.8)] backdrop-blur-md relative overflow-hidden border border-[rgba(34,211,238,0.2)] rounded-[2.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex flex-col items-center justify-center transform-gpu"
       style={{ marginBottom: '5rem' }}
     >
       <Spotlight
-        className="-top-40 left-0 md:left-20 md:-top-32"
+        className="-top-40 left-0 md:left-1/2 md:-translate-x-1/2 md:-top-32"
         fill="rgba(34, 211, 238, 0.25)"
       />
       
-      {/* Left content */}
+      {/* Centered content */}
       <div 
-        className="w-full md:w-[50%] relative z-10 flex flex-col justify-center"
-        style={{ padding: 'clamp(2rem, 5vw, 4rem)', paddingLeft: 'clamp(2rem, 8vw, 6rem)' }}
+        className="w-full max-w-4xl relative z-10 flex flex-col items-center justify-center text-center"
+        style={{ padding: 'clamp(2rem, 5vw, 4rem)' }}
       >
         {/* Tech Accent Top */}
-        <div className="flex items-center gap-3 mb-8 opacity-80">
+        <div className="flex items-center justify-center gap-3 mb-8 opacity-80">
           <div className="flex gap-1.5">
             <span className="w-1 h-4 bg-cyan-400 rounded-sm animate-pulse" />
             <span className="w-1 h-4 bg-cyan-400/40 rounded-sm" />
@@ -32,7 +32,7 @@ export function HeroSpline() {
           </span>
         </div>
         
-        <h1 className="heroTitle" style={{ textAlign: 'left', marginBottom: '1.25rem', lineHeight: '1.05', letterSpacing: '-0.02em', fontSize: 'clamp(3rem, 5vw, 4.5rem)' }}>
+        <h1 className="heroTitle" style={{ textAlign: 'center', marginBottom: '1.25rem', lineHeight: '1.05', letterSpacing: '-0.02em', fontSize: 'clamp(3rem, 5vw, 4.5rem)' }}>
           <span style={{ fontWeight: 400, color: '#f8fafc' }}>Trade with</span><br />
           <span className="textGlow" style={{ fontWeight: 800 }}>Algorithmic</span>
           <span style={{ fontWeight: 300, color: 'rgba(255,255,255,0.7)' }}> Clarity</span>
@@ -40,8 +40,9 @@ export function HeroSpline() {
         
         <div style={{ marginBottom: '3rem' }}>
           <p className="heroSubtitle" style={{ 
-            textAlign: 'left', 
-            maxWidth: '440px', 
+            textAlign: 'center', 
+            maxWidth: '600px', 
+            margin: '0 auto',
             lineHeight: '1.7', 
             color: 'rgba(255, 255, 255, 0.65)', 
             fontSize: '1.1rem',
@@ -52,7 +53,7 @@ export function HeroSpline() {
         </div>
 
         {/* Call to Action Actions */}
-        <div className="flex items-center gap-6" style={{ flexWrap: 'wrap' }}>
+        <div className="flex items-center justify-center gap-6" style={{ flexWrap: 'wrap' }}>
           <button 
             className="group relative overflow-hidden rounded-full font-medium tracking-wide text-sm transition-all duration-300"
             style={{ 
@@ -87,13 +88,15 @@ export function HeroSpline() {
         </div>
       </div>
 
-      {/* Right content */}
+      {/* Right content - 3D Robot (Commented out for performance) */}
+      {/* 
       <div className="w-full md:w-[55%] relative min-h-[400px] md:h-full flex items-center justify-center">
         <SplineScene 
           scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
           className="w-full h-full"
         />
       </div>
+      */}
     </Card>
   )
 }

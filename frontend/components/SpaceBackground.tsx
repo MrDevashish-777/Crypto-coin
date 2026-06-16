@@ -25,13 +25,14 @@ export default function SpaceBackground() {
     let animId = 0;
 
     const buildStars = (w: number, h: number) => {
-      const count = Math.min(600, Math.floor((w * h) / 2500)); // Denser starfield
+      // Reduce star count significantly for better performance
+      const count = Math.min(250, Math.floor((w * h) / 6000)); 
       stars = Array.from({ length: count }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
-        r: Math.random() * 1.8 + 0.2, // Slightly larger variance
+        r: Math.random() * 1.5 + 0.2, // Slightly smaller variance
         baseOpacity: Math.random() * 0.7 + 0.2,
-        twinkleSpeed: Math.random() * 0.002 + 0.0005,
+        twinkleSpeed: Math.random() * 0.0015 + 0.0005,
         phase: Math.random() * Math.PI * 2,
       }));
     };
@@ -56,25 +57,21 @@ export default function SpaceBackground() {
       const h = window.innerHeight;
       ctx.clearRect(0, 0, w, h);
 
-      for (const star of stars) {
-        // Create an organic twinkle
+      ctx.fillStyle = '#e6f0ff'; // Use a solid fill style and change globalAlpha instead
+
+      for (let i = 0; i < stars.length; i++) {
+        const star = stars[i];
+        // Simplified organic twinkle math
         const twinkle = 0.5 + 0.5 * Math.sin(time * star.twinkleSpeed + star.phase);
-        const alpha = star.baseOpacity * twinkle;
+        ctx.globalAlpha = star.baseOpacity * twinkle;
         
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(230, 240, 255, ${alpha})`;
         ctx.fill();
-
-        // Add a soft glow to larger/brighter stars
-        if (star.r > 1.2 && alpha > 0.6) {
-          ctx.beginPath();
-          ctx.arc(star.x, star.y, star.r * 3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(180, 220, 255, ${alpha * 0.15})`;
-          ctx.fill();
-        }
+        // Removed the expensive secondary glow arc pass for performance
       }
 
+      ctx.globalAlpha = 1; // Reset alpha
       animId = requestAnimationFrame(draw);
     };
 
@@ -89,8 +86,11 @@ export default function SpaceBackground() {
   return (
     <div className={styles.space} aria-hidden="true">
       <canvas ref={canvasRef} className={styles.starsCanvas} />
+      {/* Heavy animated blur elements commented out for performance */}
+      {/* 
       <div className={styles.nebulaPurple} />
-      <div className={styles.nebulaCyan} />
+      <div className={styles.nebulaCyan} /> 
+      */}
       <div className={styles.moon}>
         <div className={styles.moonGlow} />
         <div className={styles.moonBody}>
@@ -99,6 +99,8 @@ export default function SpaceBackground() {
           <span className={styles.crater3} />
         </div>
       </div>
+      {/* Astronaut image commented out per user request */}
+      {/*
       <div className={styles.astronaut}>
         <img 
           src="/astronaut.png" 
@@ -106,6 +108,7 @@ export default function SpaceBackground() {
           className={styles.astronautImg}
         />
       </div>
+      */}
       <div className={styles.shootingStar} />
       <div className={styles.shootingStar2} />
     </div>

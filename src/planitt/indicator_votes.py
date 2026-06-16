@@ -53,17 +53,30 @@ INDICATOR_WEIGHTS: dict[str, float] = {
 
 LEARNED_WEIGHTS_PATH = "config/learned_weights.json"
 
+
 def get_active_weights() -> dict[str, float]:
     weights = INDICATOR_WEIGHTS.copy()
-    if os.path.exists(LEARNED_WEIGHTS_PATH):
+    sop_path = settings.SOP_WEIGHTS_PATH
+    if settings.ADVISOR_USE_SOP_WEIGHTS and os.path.exists(sop_path):
         try:
-            with open(LEARNED_WEIGHTS_PATH, "r") as f:
+            with open(sop_path, encoding="utf-8") as f:
+                sop = json.load(f)
+            for k, v in sop.items():
+                if k.startswith("_"):
+                    continue
+                if isinstance(v, (int, float)):
+                    weights[k] = float(v)
+        except Exception as exc:
+            print(f"Error loading SOP weights: {exc}")
+    elif os.path.exists(LEARNED_WEIGHTS_PATH):
+        try:
+            with open(LEARNED_WEIGHTS_PATH, encoding="utf-8") as f:
                 learned = json.load(f)
-                for k, v in learned.items():
-                    if isinstance(v, (int, float)):
-                        weights[k] = float(v)
-        except Exception as e:
-            print(f"Error loading learned weights: {e}")
+            for k, v in learned.items():
+                if isinstance(v, (int, float)):
+                    weights[k] = float(v)
+        except Exception as exc:
+            print(f"Error loading learned weights: {exc}")
     return weights
 
 
@@ -368,8 +381,10 @@ def evaluate_indicator_votes(
     expected_side: SignalSide,
     key_level: float,
     ema50: float,
+    timeframe: str | None = None,
 ) -> IndicatorVoteResult:
     """Compute weighted indicator votes; side must align with expected_side."""
+    tf = timeframe or candle_list.timeframe or "1h"
     closes = candle_list.closes
     opens = candle_list.opens
     highs = candle_list.highs
@@ -439,8 +454,9 @@ def evaluate_indicator_votes(
     total = win_score + lose_score + 1e-9
     agreement_ratio = win_score / total
 
-    min_sources = settings.ADVISOR_MIN_AGREEING_SOURCES
-    margin = settings.ADVISOR_MIN_VOTE_MARGIN
+    from src.advisor.segment_gates import vote_thresholds_for_side
+
+    min_sources, margin = vote_thresholds_for_side(expected_side, tf)
 
     if agreeing < min_sources:
         return IndicatorVoteResult(

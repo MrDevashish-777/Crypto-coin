@@ -320,10 +320,28 @@ def evaluate_confluence_pre_gates_with_reason(
         elif adx_ok and regime_result.regime == MarketRegime.VOLATILE and settings.PLANITT_ALLOW_VOLATILE_THROUGH_GATES:
             if di_bull:
                 side = "BUY"
-            elif di_bear:
+            elif di_bear and not settings.ADVISOR_BLOCK_VOLATILE_SELL:
                 side = "SELL"
     if side is None:
         return ConfluenceEvaluation(features=None, reject_reason="ema_misalignment")
+
+    if side == "SELL":
+        from src.advisor.segment_gates import validate_sell_regime
+
+        ok_sell, sell_reason = validate_sell_regime(
+            side, adx=regime_result.adx, regime=regime_result.regime
+        )
+        if not ok_sell:
+            return ConfluenceEvaluation(features=None, reject_reason=sell_reason)
+
+        pd = regime_result.plus_di
+        md = regime_result.minus_di
+        if pd is not None and md is not None:
+            if (md - pd) < settings.ADVISOR_SELL_MIN_DI_SPREAD:
+                return ConfluenceEvaluation(
+                    features=None,
+                    reject_reason=f"sell_di_spread_{md - pd:.1f}",
+                )
 
     # --- Swing structure HH/HL vs LH/LL ---
     swing_ok = _swing_structure_ok(highs, lows, side=side)
@@ -554,9 +572,15 @@ def evaluate_confluence_pre_gates_with_reason(
         expected_side=side,
         key_level=float(key_level),
         ema50=float(ema50),
+        timeframe=candle_list.timeframe,
     )
     if vote_result.reject_reason:
         return ConfluenceEvaluation(features=None, reject_reason=vote_result.reject_reason)
+
+    from src.advisor.segment_gates import get_publish_thresholds
+
+    segment_min_hits = get_publish_thresholds(side, candle_list.timeframe).min_confluence_hits
+    effective_min_hits = segment_min_hits
 
     merged_hits = list(dict.fromkeys(confluence_hits + list(vote_result.confluence_hits)))
     if len(merged_hits) < effective_min_hits:

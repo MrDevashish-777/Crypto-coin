@@ -31,7 +31,13 @@ def bucket_key(symbol: str, timeframe: str) -> str:
     return f"{symbol.upper()}_{timeframe}"
 
 
-def get_bucket_expectancy(symbol: str, timeframe: str) -> float | None:
+def get_bucket_expectancy(symbol: str, timeframe: str, *, direction: str | None = None) -> float | None:
+    from src.advisor.live_performance import get_live_bucket_expectancy
+
+    live = get_live_bucket_expectancy(symbol, timeframe, direction=direction)
+    if live is not None:
+        return live
+
     buckets = load_bucket_expectancy()
     entry = buckets.get(bucket_key(symbol, timeframe))
     if not entry:

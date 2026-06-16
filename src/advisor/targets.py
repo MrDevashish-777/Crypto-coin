@@ -348,7 +348,7 @@ def compute_advisor_levels(
     entry_low, entry_high = _anchor_entry_band(price, entry_low, entry_high)
     entry_mid = (entry_low + entry_high) / 2.0
 
-    return {
+    result = {
         "entry_low": round(entry_low, 8),
         "entry_high": round(entry_high, 8),
         "stop_loss": round(stop_loss, 8),
@@ -360,3 +360,18 @@ def compute_advisor_levels(
         "chart_indicators": chart_indicators,
         "tp_sl_method": tp_sl_method,
     }
+    if settings.ADVISOR_REACHABILITY_GATE_ENABLED:
+        from src.advisor.reachability import check_tp_reachability
+        from src.advisor.validity import infer_trade_horizon
+
+        reach = check_tp_reachability(
+            entry_mid=entry_mid,
+            target=float(result["target"]),
+            atr=atr,
+            price=price,
+            timeframe=features.timeframe,
+            trade_horizon=infer_trade_horizon(features.timeframe),
+        )
+        result["tp_distance_pct"] = round(reach.tp_distance_pct, 4)
+        result["expected_move_pct"] = round(reach.expected_move_pct, 4)
+    return result

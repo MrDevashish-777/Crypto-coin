@@ -30,12 +30,24 @@
       "expired": 88,
       "signals_per_week": 7.63
     },
-    "1h_4h_combined": {
-      "win_rate_pct": 37.6,
-      "sop_win_rate_pct": 20.61,
-      "net_r": 16.855,
-      "expectancy": 0.135,
-      "signals_per_week": 8.88
+    "reachability_gate": {
+      "enabled": true,
+      "k": 1.2,
+      "auto_swing": false,
+      "before": {
+        "win_rate_pct": 43.1,
+        "sop_win_rate_pct": 21.83,
+        "expiry_rate_pct": 49.3,
+        "net_r": 35.565,
+        "signals_per_week": 8.91
+      },
+      "after": {
+        "win_rate_pct": 52.56,
+        "sop_win_rate_pct": 32.54,
+        "expiry_rate_pct": 38.1,
+        "net_r": 46.939,
+        "signals_per_week": 4.9
+      }
     }
   },
   "recommended_env": {

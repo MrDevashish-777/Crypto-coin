@@ -81,10 +81,13 @@ def check_htf_alignment(
     signal_side: SignalSide,
     signal_tf: str,
     htf_candles: dict[str, CandleList],
+    *,
+    strict: bool = False,
+    min_agree_override: int | None = None,
 ) -> MTFAlignmentResult:
     """
     Verify higher-timeframe trend agrees with the signal side.
-    Requires at least PLANITT_MTF_MIN_AGREEING HTFs (default 1 of N).
+    strict=True: no soft ranging-DI alignment (required for SELL / swing per SOP).
     """
     htfs = higher_timeframes_for(signal_tf)
     if not htfs:
@@ -98,7 +101,11 @@ def check_htf_alignment(
             htf_details=(),
         )
 
-    min_agree = min(len(htfs), max(1, settings.PLANITT_MTF_MIN_AGREEING))
+    min_agree = min_agree_override if min_agree_override is not None else min(
+        len(htfs), max(1, settings.PLANITT_MTF_MIN_AGREEING)
+    )
+    if strict:
+        min_agree = len(htfs)
     detector = MarketRegimeDetector()
     details: list[str] = []
     scores: list[float] = []
@@ -123,7 +130,7 @@ def check_htf_alignment(
             scores.append(1.0)
             continue
 
-        if regime.regime == MarketRegime.RANGING and settings.PLANITT_MTF_ALLOW_RANGING_HTF:
+        if regime.regime == MarketRegime.RANGING and settings.PLANITT_MTF_ALLOW_RANGING_HTF and not strict:
             if _ranging_htf_side(regime, signal_side):
                 details.append(f"htf_ranging_di_{tf}")
                 scores.append(0.75)

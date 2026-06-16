@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from config.constants import CRYPTO_PAIRS, MIN_CANDLES_FOR_ANALYSIS, TIMEFRAMES
@@ -95,6 +95,29 @@ class DataFetcher:
                 results[symbol] = result
         logger.info("Successfully fetched %d/%d symbols", len(results), len(targets))
         return results
+
+    async def fetch_candles_since(
+        self,
+        symbol: str,
+        timeframe: str,
+        since: datetime,
+        *,
+        margin_currency: str | None = None,
+    ) -> CandleList:
+        """Fetch OHLCV from a UTC timestamp through now (for signal reconciliation)."""
+        if symbol not in CRYPTO_PAIRS:
+            raise ValueError(f"Unsupported symbol: {symbol}")
+        if timeframe not in TIMEFRAMES:
+            raise ValueError(f"Unsupported timeframe: {timeframe}")
+
+        margin = (margin_currency or self.margin_currency).upper()
+        pair = self.pair_for_symbol(symbol, margin)
+        since_utc = since.astimezone(timezone.utc)
+        end_utc = datetime.now(timezone.utc)
+        candles = await self.coindcx.get_klines_range(pair, timeframe, since_utc, end_utc)
+        if not candles:
+            raise ValueError(f"no_data_since:{symbol}:{timeframe}")
+        return CandleList(symbol=symbol, timeframe=timeframe, candles=candles)
 
     async def get_current_price(
         self,

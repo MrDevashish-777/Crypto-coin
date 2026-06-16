@@ -9,10 +9,18 @@ from zoneinfo import ZoneInfo
 
 from config.settings import settings
 from src.advisor.allocation import WeeklyAllocationTracker
+from src.advisor.macro_trend import validate_macro_for_signal
+from src.advisor.reachability import reachability_from_levels
+from src.advisor.segment_gates import (
+    get_publish_thresholds,
+    mtf_min_agreeing_for,
+    passes_segment_quality,
+    validate_tier_a,
+)
 from src.advisor.sop_gates import validate_levels
 from src.advisor.targets import compute_advisor_levels
 from src.advisor.validity import compute_valid_until, infer_trade_horizon
-from src.analysis.backtest_config import get_bucket_expectancy, passes_quality_tier, quality_tier
+from src.analysis.backtest_config import get_bucket_expectancy, quality_tier
 from src.data.models import Candle, CandleList
 from src.planitt.confluence import evaluate_confluence_pre_gates_with_reason
 from src.planitt.mtf_confluence import check_htf_alignment, higher_timeframes_for
@@ -98,6 +106,7 @@ class BacktestResult:
     trades: list[dict[str, Any]] = field(default_factory=list)
     by_symbol: dict[str, dict[str, float]] = field(default_factory=dict)
     by_timeframe: dict[str, dict[str, float]] = field(default_factory=dict)
+    by_direction: dict[str, dict[str, float]] = field(default_factory=dict)
 
 
 @dataclass
@@ -142,12 +151,14 @@ class BacktestEngine:
         entry_fill_bars: int = 6,
         simulate_allocation: bool = False,
         production_parity: bool = True,
+        track_open_positions: bool = True,
     ) -> None:
         self.window_size = window_size
         self.forward_bars = forward_bars
         self.entry_fill_bars = entry_fill_bars
         self.simulate_allocation = simulate_allocation
         self.production_parity = production_parity
+        self.track_open_positions = track_open_positions
 
     def _entry_filled(
         self,
@@ -179,37 +190,44 @@ class BacktestEngine:
         stop_loss: float,
         target: float,
         valid_until_ms: int,
-    ) -> SimulatedTrade:
+    ) -> tuple[SimulatedTrade, int]:
         end_idx = min(entry_idx + self.forward_bars, len(candle_list.candles) - 1)
         outcome = "expired"
         r_multiple = 0.0
         risk = abs(entry - stop_loss)
+        exit_idx = end_idx
 
         for j in range(entry_idx + 1, end_idx + 1):
             bar = candle_list.candles[j]
             if bar.timestamp > valid_until_ms:
+                exit_idx = j - 1 if j > entry_idx + 1 else entry_idx + 1
                 break
             high, low = bar.high, bar.low
             if side == "BUY":
                 if low <= stop_loss:
                     outcome = "sl_hit"
                     r_multiple = -1.0
+                    exit_idx = j
                     break
                 if high >= target:
                     outcome = "tp_hit"
                     r_multiple = abs(target - entry) / max(risk, 1e-9)
+                    exit_idx = j
                     break
             else:
                 if high >= stop_loss:
                     outcome = "sl_hit"
                     r_multiple = -1.0
+                    exit_idx = j
                     break
                 if low <= target:
                     outcome = "tp_hit"
                     r_multiple = abs(entry - target) / max(risk, 1e-9)
+                    exit_idx = j
                     break
+            exit_idx = j
 
-        return SimulatedTrade(
+        trade = SimulatedTrade(
             side=side,
             entry=entry,
             stop_loss=stop_loss,
@@ -217,6 +235,7 @@ class BacktestEngine:
             outcome=outcome,
             r_multiple=r_multiple,
         )
+        return trade, exit_idx
 
     def _compute_metrics(
         self,
@@ -274,8 +293,13 @@ class BacktestEngine:
 
         by_symbol: dict[str, dict[str, float]] = {}
         by_timeframe: dict[str, dict[str, float]] = {}
+        by_direction: dict[str, dict[str, float]] = {}
         for t in closed:
-            for bucket, key in ((by_symbol, t.symbol), (by_timeframe, t.timeframe)):
+            for bucket, key in (
+                (by_symbol, t.symbol),
+                (by_timeframe, t.timeframe),
+                (by_direction, t.side),
+            ):
                 if key not in bucket:
                     bucket[key] = {"wins": 0, "losses": 0, "net_r": 0.0, "trades": 0}
                 bucket[key]["trades"] += 1
@@ -306,6 +330,7 @@ class BacktestEngine:
             trades=trade_logs,
             by_symbol=by_symbol,
             by_timeframe=by_timeframe,
+            by_direction=by_direction,
         )
 
     def run(
@@ -314,6 +339,7 @@ class BacktestEngine:
         *,
         gate_config: BacktestGateConfig | None = None,
         htf_series: dict[str, CandleList] | None = None,
+        btc_htf_series: dict[str, CandleList] | None = None,
         start_idx: int | None = None,
         end_idx: int | None = None,
     ) -> BacktestResult:
@@ -323,6 +349,7 @@ class BacktestEngine:
         expired_count = 0
         reject_reasons: dict[str, int] = {}
         completed_trades: list[SimulatedTrade] = []
+        open_until_idx: dict[tuple[str, str], int] = {}
         allocation = WeeklyAllocationTracker() if self.simulate_allocation else None
         cfg = gate_config or BacktestGateConfig()
         gate_values = cfg.merged_with_settings()
@@ -339,6 +366,11 @@ class BacktestEngine:
                 )
                 signal_bar = candle_list.candles[idx]
                 live_price = signal_bar.close
+                pos_key = (candle_list.symbol, candle_list.timeframe)
+                if self.track_open_positions and idx < open_until_idx.get(pos_key, -1):
+                    dropped += 1
+                    reject_reasons["active_open_signal"] = reject_reasons.get("active_open_signal", 0) + 1
+                    continue
 
                 eval_result = evaluate_confluence_pre_gates_with_reason(
                     window,
@@ -354,6 +386,20 @@ class BacktestEngine:
                     continue
 
                 features = eval_result.features
+                if features.side.upper() not in settings.advisor_allowed_directions:
+                    dropped += 1
+                    reject_reasons["direction_blocked"] = reject_reasons.get("direction_blocked", 0) + 1
+                    continue
+
+                allowlist = settings.advisor_symbol_allowlist
+                if allowlist is not None and candle_list.symbol.upper() not in allowlist:
+                    dropped += 1
+                    reject_reasons["symbol_not_in_allowlist"] = (
+                        reject_reasons.get("symbol_not_in_allowlist", 0) + 1
+                    )
+                    continue
+
+                profile = get_publish_thresholds(features.side, candle_list.timeframe)
 
                 if self.production_parity:
                     htf_candles: dict[str, CandleList] = {}
@@ -364,7 +410,13 @@ class BacktestEngine:
                                 sliced = _slice_htf_at_timestamp(series, signal_bar.timestamp)
                                 if sliced is not None:
                                     htf_candles[tf] = sliced
-                    mtf = check_htf_alignment(features.side, candle_list.timeframe, htf_candles)
+                    mtf = check_htf_alignment(
+                        features.side,
+                        candle_list.timeframe,
+                        htf_candles,
+                        strict=profile.strict_htf,
+                        min_agree_override=mtf_min_agreeing_for(features.side, candle_list.timeframe),
+                    )
                     if not mtf.aligned:
                         dropped += 1
                         reason = (mtf.reject_reason or "mtf_misalignment").split(":")[0]
@@ -372,7 +424,33 @@ class BacktestEngine:
                         continue
                     features = replace(features, mtf_score=mtf.mtf_score)
 
-                if features.pre_confidence < gate_values["ADVISOR_MIN_CONFIDENCE"]:
+                ok_macro, macro_reason = validate_macro_for_signal(
+                    symbol=candle_list.symbol,
+                    side=features.side,
+                    timeframe=candle_list.timeframe,
+                    signal_ts_ms=signal_bar.timestamp,
+                    btc_htf=btc_htf_series,
+                )
+                if not ok_macro:
+                    dropped += 1
+                    reason = (macro_reason or "macro_reject").split(":")[0]
+                    reject_reasons[reason] = reject_reasons.get(reason, 0) + 1
+                    continue
+
+                if settings.ADVISOR_POSITIVE_BUCKETS_ONLY:
+                    from src.advisor.live_performance import get_live_bucket_expectancy
+
+                    bucket_exp = get_live_bucket_expectancy(
+                        candle_list.symbol, candle_list.timeframe, direction=features.side
+                    )
+                    if bucket_exp is not None and bucket_exp <= 0:
+                        dropped += 1
+                        reject_reasons["negative_live_bucket"] = (
+                            reject_reasons.get("negative_live_bucket", 0) + 1
+                        )
+                        continue
+
+                if features.pre_confidence < profile.min_confidence:
                     dropped += 1
                     reject_reasons["confidence"] = reject_reasons.get("confidence", 0) + 1
                     continue
@@ -388,20 +466,21 @@ class BacktestEngine:
 
                 composite = _composite_score(features.pre_confidence, features.mtf_score)
                 tier = quality_tier(composite)
-                if composite < settings.ADVISOR_MIN_COMPOSITE_SCORE:
+                ok_seg, seg_reason = passes_segment_quality(
+                    features=features,
+                    composite_score=composite,
+                    tier=tier,
+                    timeframe=candle_list.timeframe,
+                )
+                if not ok_seg:
                     dropped += 1
-                    reject_reasons["composite_below_min"] = reject_reasons.get("composite_below_min", 0) + 1
-                    continue
-                if features.mtf_score < settings.ADVISOR_MIN_MTF_SCORE:
-                    dropped += 1
-                    reject_reasons["mtf_below_min"] = reject_reasons.get("mtf_below_min", 0) + 1
-                    continue
-                if not passes_quality_tier(tier, settings.ADVISOR_PUBLISH_MIN_QUALITY_TIER):
-                    dropped += 1
-                    reject_reasons["quality_tier"] = reject_reasons.get("quality_tier", 0) + 1
+                    reason = (seg_reason or "segment_quality").split(":")[0]
+                    reject_reasons[reason] = reject_reasons.get(reason, 0) + 1
                     continue
                 if settings.ADVISOR_BLOCK_NEGATIVE_BUCKETS:
-                    bucket_exp = get_bucket_expectancy(candle_list.symbol, candle_list.timeframe)
+                    bucket_exp = get_bucket_expectancy(
+                        candle_list.symbol, candle_list.timeframe, direction=features.side
+                    )
                     if bucket_exp is not None and bucket_exp < 0:
                         dropped += 1
                         reject_reasons["negative_bucket"] = reject_reasons.get("negative_bucket", 0) + 1
@@ -431,6 +510,45 @@ class BacktestEngine:
                         reject_reasons[reason] = reject_reasons.get(reason, 0) + 1
                         continue
 
+                generated_at = _bar_datetime_utc(signal_bar.timestamp).astimezone(IST)
+                reach = reachability_from_levels(
+                    levels,
+                    atr=float(features.atr or live_price * 0.0008),
+                    price=live_price,
+                    timeframe=candle_list.timeframe,
+                    generated_at=generated_at,
+                )
+                if not reach.ok:
+                    dropped += 1
+                    reason = (reach.reason or "tp_unreachable").split(":")[0]
+                    reject_reasons[reason] = reject_reasons.get(reason, 0) + 1
+                    continue
+
+                try:
+                    rr_val = float(str(levels["risk_reward"]).split(":", 1)[1])
+                except (IndexError, ValueError):
+                    rr_val = 0.0
+                ok_tier_a, tier_a_reason = validate_tier_a(
+                    tier=tier,
+                    direction=features.side,
+                    timeframe=candle_list.timeframe,
+                    features=features,
+                    mtf_score=features.mtf_score,
+                    reach=reach,
+                    risk_reward_value=rr_val,
+                )
+                if not ok_tier_a:
+                    dropped += 1
+                    reason = (tier_a_reason or "tier_a_reject").split(":")[0]
+                    reject_reasons[reason] = reject_reasons.get(reason, 0) + 1
+                    continue
+                if profile.require_swing_reachability and (
+                    reach.trade_horizon != "swing" or not reach.ok
+                ):
+                    dropped += 1
+                    reject_reasons["swing_reachability"] = reject_reasons.get("swing_reachability", 0) + 1
+                    continue
+
                 filled, entry_idx, entry_price = self._entry_filled(
                     candle_list,
                     idx,
@@ -444,14 +562,13 @@ class BacktestEngine:
                     continue
 
                 generated += 1
-                trade_horizon = infer_trade_horizon(candle_list.timeframe)
-                generated_at = _bar_datetime_utc(signal_bar.timestamp).astimezone(IST)
+                trade_horizon = reach.trade_horizon
                 valid_until = compute_valid_until(
                     trade_horizon, generated_at=generated_at, timeframe=candle_list.timeframe
                 )
                 valid_until_ms = int(valid_until.timestamp() * 1000)
 
-                trade = self._simulate_trade(
+                trade, exit_idx = self._simulate_trade(
                     candle_list,
                     entry_idx,
                     side=features.side,
@@ -466,6 +583,8 @@ class BacktestEngine:
                 trade.composite_score = _composite_score(features.pre_confidence, features.mtf_score)
                 trade.confluence_hits = features.confluence_hits
                 trade.generated_at_ms = signal_bar.timestamp
+                if self.track_open_positions:
+                    open_until_idx[pos_key] = exit_idx
 
                 if trade.outcome == "expired":
                     expired_count += 1

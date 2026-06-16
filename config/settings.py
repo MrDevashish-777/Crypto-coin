@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """Configuration settings for CoinDCX Futures Advisor."""
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 from pathlib import Path
@@ -48,17 +49,91 @@ class Settings(BaseSettings):
     # CoinDCX Futures advisor
     COINDCX_MARGIN_CURRENCIES_RAW: str = os.getenv("COINDCX_MARGIN_CURRENCIES", "USDT,INR")
     COINDCX_DEFAULT_MARGIN: str = os.getenv("COINDCX_DEFAULT_MARGIN", "USDT")
-    MAX_WEEKLY_SIGNALS: int = int(os.getenv("MAX_WEEKLY_SIGNALS", "14"))
+    MAX_WEEKLY_SIGNALS: int = int(os.getenv("MAX_WEEKLY_SIGNALS", "100"))
+    MAX_DAILY_SIGNALS: int = int(os.getenv("MAX_DAILY_SIGNALS", "25"))
+    MAX_PUBLISH_PER_SCAN: int = int(os.getenv("MAX_PUBLISH_PER_SCAN", "8"))
+    ADVISOR_TARGET_DAILY_SIGNALS: int = int(os.getenv("ADVISOR_TARGET_DAILY_SIGNALS", "10"))
     MIN_WEEKLY_BTC_PCT: float = float(os.getenv("MIN_WEEKLY_BTC_PCT", "0.20"))
     MIN_WEEKLY_MAJORS_PCT: float = float(os.getenv("MIN_WEEKLY_MAJORS_PCT", "0.35"))
     ADVISOR_STRICT_ALLOCATION: bool = os.getenv("ADVISOR_STRICT_ALLOCATION", "true").lower() == "true"
-    ADVISOR_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_MIN_CONFIDENCE", "0.72"))
+    ADVISOR_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_MIN_CONFIDENCE", "0.75"))
     ADVISOR_OUTPUT_DIR: str = os.getenv("ADVISOR_OUTPUT_DIR", "output/reports")
-    ADVISOR_MIN_CONFLUENCE_HITS: int = int(os.getenv("ADVISOR_MIN_CONFLUENCE_HITS", "3"))
-    ADVISOR_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_MIN_AGREEING_SOURCES", "4"))
-    ADVISOR_MIN_VOTE_MARGIN: float = float(os.getenv("ADVISOR_MIN_VOTE_MARGIN", "0.15"))
-    ADVISOR_SYMBOL_COOLDOWN_HOURS: int = int(os.getenv("ADVISOR_SYMBOL_COOLDOWN_HOURS", "6"))
-    ADVISOR_SCAN_TIMEFRAMES_RAW: str = os.getenv("ADVISOR_SCAN_TIMEFRAMES", "1h,4h,1d")
+    ADVISOR_MIN_CONFLUENCE_HITS: int = int(os.getenv("ADVISOR_MIN_CONFLUENCE_HITS", "4"))
+    ADVISOR_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_MIN_AGREEING_SOURCES", "5"))
+    ADVISOR_MIN_VOTE_MARGIN: float = float(os.getenv("ADVISOR_MIN_VOTE_MARGIN", "0.18"))
+    ADVISOR_SYMBOL_COOLDOWN_HOURS: int = int(os.getenv("ADVISOR_SYMBOL_COOLDOWN_HOURS", "2"))
+    ADVISOR_ALLOW_MULTI_TF_PER_SYMBOL: bool = (
+        os.getenv("ADVISOR_ALLOW_MULTI_TF_PER_SYMBOL", "true").lower() == "true"
+    )
+    ADVISOR_PUBLISH_PRIORITY_SYMBOLS_RAW: str = os.getenv(
+        "ADVISOR_PUBLISH_PRIORITY_SYMBOLS",
+        "SOL,XRP,ARB,INJ,TIA,LINK,ATOM,AVAX,UNI,FIL,ADA,OP,NEAR,SUI,SEI",
+    )
+    # Relaxed gates for BUY-only high-volume mode (SELL blocked separately)
+    ADVISOR_BUY_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_BUY_MIN_CONFIDENCE", "0.68"))
+    ADVISOR_BUY_MIN_COMPOSITE_SCORE: float = float(os.getenv("ADVISOR_BUY_MIN_COMPOSITE_SCORE", "0.74"))
+    ADVISOR_BUY_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_BUY_MIN_MTF_SCORE", "0.60"))
+    ADVISOR_BUY_MIN_CONFLUENCE_HITS: int = int(os.getenv("ADVISOR_BUY_MIN_CONFLUENCE_HITS", "3"))
+    ADVISOR_BUY_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_BUY_MIN_AGREEING_SOURCES", "2"))
+    ADVISOR_BUY_MIN_VOTE_MARGIN: float = float(os.getenv("ADVISOR_BUY_MIN_VOTE_MARGIN", "0.08"))
+    ADVISOR_BUY_PUBLISH_MIN_QUALITY_TIER: str = os.getenv(
+        "ADVISOR_BUY_PUBLISH_MIN_QUALITY_TIER", "C"
+    ).upper()
+    ADVISOR_SCAN_TIMEFRAMES_RAW: str = Field(
+        default="1h,4h,1d",
+        validation_alias=AliasChoices("ADVISOR_SCAN_TIMEFRAMES", "ADVISOR_SCAN_TIMEFRAMES_RAW"),
+    )
+    ADVISOR_ALLOWED_DIRECTIONS_RAW: str = Field(
+        default="ALL",
+        validation_alias=AliasChoices("ADVISOR_ALLOWED_DIRECTIONS", "ADVISOR_ALLOWED_DIRECTIONS_RAW"),
+    )
+    ADVISOR_BLOCKED_TIMEFRAMES_RAW: str = Field(
+        default="",
+        validation_alias=AliasChoices("ADVISOR_BLOCKED_TIMEFRAMES", "ADVISOR_BLOCKED_TIMEFRAMES_RAW"),
+    )
+    ADVISOR_SYMBOL_ALLOWLIST_RAW: str = os.getenv("ADVISOR_SYMBOL_ALLOWLIST", "")
+    ADVISOR_BLOCK_SWING_HORIZON: bool = (
+        os.getenv("ADVISOR_BLOCK_SWING_HORIZON", "false").lower() == "true"
+    )
+    ADVISOR_USE_SOP_WEIGHTS: bool = os.getenv("ADVISOR_USE_SOP_WEIGHTS", "true").lower() == "true"
+    SOP_WEIGHTS_PATH: str = os.getenv("SOP_WEIGHTS_PATH", "config/sop_crypto_weights.json")
+    # SELL segment — stricter than SOP baseline (fixes shorts against bull HTF)
+    ADVISOR_SELL_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_SELL_MIN_CONFIDENCE", "0.78"))
+    ADVISOR_SELL_MIN_COMPOSITE_SCORE: float = float(os.getenv("ADVISOR_SELL_MIN_COMPOSITE_SCORE", "0.86"))
+    ADVISOR_SELL_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_SELL_MIN_MTF_SCORE", "0.90"))
+    ADVISOR_SELL_MIN_CONFLUENCE_HITS: int = int(os.getenv("ADVISOR_SELL_MIN_CONFLUENCE_HITS", "5"))
+    ADVISOR_SELL_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_SELL_MIN_AGREEING_SOURCES", "6"))
+    ADVISOR_SELL_MIN_VOTE_MARGIN: float = float(os.getenv("ADVISOR_SELL_MIN_VOTE_MARGIN", "0.20"))
+    ADVISOR_SELL_PUBLISH_MIN_QUALITY_TIER: str = os.getenv(
+        "ADVISOR_SELL_PUBLISH_MIN_QUALITY_TIER", "B"
+    ).upper()
+    ADVISOR_SELL_MIN_ADX: float = float(os.getenv("ADVISOR_SELL_MIN_ADX", "26"))
+    ADVISOR_SELL_ALLOW_RANGING: bool = os.getenv("ADVISOR_SELL_ALLOW_RANGING", "false").lower() == "true"
+    ADVISOR_SELL_MIN_DI_SPREAD: float = float(os.getenv("ADVISOR_SELL_MIN_DI_SPREAD", "3.0"))
+    ADVISOR_REQUIRE_BTC_BEAR_FOR_SELL: bool = (
+        os.getenv("ADVISOR_REQUIRE_BTC_BEAR_FOR_SELL", "true").lower() == "true"
+    )
+    ADVISOR_REQUIRE_BTC_BULL_FOR_BUY: bool = (
+        os.getenv("ADVISOR_REQUIRE_BTC_BULL_FOR_BUY", "false").lower() == "true"
+    )
+    ADVISOR_SELL_ALLOWED_TIMEFRAMES_RAW: str = Field(
+        default="4h,1d",
+        validation_alias=AliasChoices("ADVISOR_SELL_ALLOWED_TIMEFRAMES", "ADVISOR_SELL_ALLOWED_TIMEFRAMES_RAW"),
+    )
+    ADVISOR_BLOCK_VOLATILE_SELL: bool = os.getenv("ADVISOR_BLOCK_VOLATILE_SELL", "true").lower() == "true"
+    ADVISOR_TIER_A_SELL_MIN_MTF: float = float(os.getenv("ADVISOR_TIER_A_SELL_MIN_MTF", "0.95"))
+    # Swing / 4h / 1d segment — require reachable TP within SOP swing validity
+    ADVISOR_SWING_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_SWING_MIN_CONFIDENCE", "0.75"))
+    ADVISOR_SWING_MIN_COMPOSITE_SCORE: float = float(os.getenv("ADVISOR_SWING_MIN_COMPOSITE_SCORE", "0.82"))
+    ADVISOR_SWING_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_SWING_MIN_MTF_SCORE", "0.85"))
+    ADVISOR_SWING_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_SWING_MIN_AGREEING_SOURCES", "5"))
+    ADVISOR_LIVE_PERFORMANCE_GATE_ENABLED: bool = (
+        os.getenv("ADVISOR_LIVE_PERFORMANCE_GATE_ENABLED", "true").lower() == "true"
+    )
+    ADVISOR_LIVE_MIN_BUCKET_TRADES: int = int(os.getenv("ADVISOR_LIVE_MIN_BUCKET_TRADES", "2"))
+    ADVISOR_LIVE_MIN_BUCKET_EXPECTANCY: float = float(
+        os.getenv("ADVISOR_LIVE_MIN_BUCKET_EXPECTANCY", "0.0")
+    )
     ADVISOR_BACKTEST_QUALITY_GATE_ENABLED: bool = (
         os.getenv("ADVISOR_BACKTEST_QUALITY_GATE_ENABLED", "false").lower() == "true"
     )
@@ -67,12 +142,23 @@ class Settings(BaseSettings):
     )
     ADVISOR_QUALITY_TIER_A_MIN: float = float(os.getenv("ADVISOR_QUALITY_TIER_A_MIN", "0.88"))
     ADVISOR_QUALITY_TIER_B_MIN: float = float(os.getenv("ADVISOR_QUALITY_TIER_B_MIN", "0.78"))
-    ADVISOR_MIN_COMPOSITE_SCORE: float = float(os.getenv("ADVISOR_MIN_COMPOSITE_SCORE", "0.82"))
-    ADVISOR_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_MIN_MTF_SCORE", "0.75"))
+    ADVISOR_MIN_COMPOSITE_SCORE: float = float(os.getenv("ADVISOR_MIN_COMPOSITE_SCORE", "0.80"))
+    ADVISOR_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_MIN_MTF_SCORE", "0.70"))
     ADVISOR_PUBLISH_MIN_QUALITY_TIER: str = os.getenv("ADVISOR_PUBLISH_MIN_QUALITY_TIER", "B").upper()
     ADVISOR_MTF_SCORE_WEIGHT: float = float(os.getenv("ADVISOR_MTF_SCORE_WEIGHT", "0.20"))
     ADVISOR_BLOCK_NEGATIVE_BUCKETS: bool = (
         os.getenv("ADVISOR_BLOCK_NEGATIVE_BUCKETS", "true").lower() == "true"
+    )
+    ADVISOR_POSITIVE_BUCKETS_ONLY: bool = (
+        os.getenv("ADVISOR_POSITIVE_BUCKETS_ONLY", "false").lower() == "true"
+    )
+    BACKTEST_RISK_PER_TRADE_PCT: float = float(os.getenv("BACKTEST_RISK_PER_TRADE_PCT", "1.0"))
+    ADVISOR_REACHABILITY_GATE_ENABLED: bool = (
+        os.getenv("ADVISOR_REACHABILITY_GATE_ENABLED", "true").lower() == "true"
+    )
+    ADVISOR_REACHABILITY_K: float = float(os.getenv("ADVISOR_REACHABILITY_K", "1.2"))
+    ADVISOR_REACHABILITY_AUTO_SWING: bool = (
+        os.getenv("ADVISOR_REACHABILITY_AUTO_SWING", "true").lower() == "true"
     )
     CHART_RENDERER: str = os.getenv("CHART_RENDERER", "matplotlib")  # matplotlib | playwright
 
@@ -91,7 +177,11 @@ class Settings(BaseSettings):
 
     # Background scanner
     ENABLE_BACKGROUND_SCANNER: bool = os.getenv("ENABLE_BACKGROUND_SCANNER", "true").lower() == "true"
-    SCAN_INTERVAL: int = int(os.getenv("SCAN_INTERVAL", "900"))
+    SCAN_INTERVAL: int = int(os.getenv("SCAN_INTERVAL", "300"))
+    ADVISOR_RECONCILE_INTERVAL: int = int(os.getenv("ADVISOR_RECONCILE_INTERVAL", "300"))
+    ADVISOR_RECONCILE_ON_STARTUP: bool = (
+        os.getenv("ADVISOR_RECONCILE_ON_STARTUP", "true").lower() == "true"
+    )
 
     # Confluence engine tunables (used by src/planitt/confluence.py)
     PLANITT_MIN_CANDLES: int = int(os.getenv("PLANITT_MIN_CANDLES", "205"))
@@ -193,8 +283,44 @@ class Settings(BaseSettings):
     def advisor_scan_timeframes(self) -> list[str]:
         raw = self.ADVISOR_SCAN_TIMEFRAMES_RAW.strip()
         if not raw:
-            return ["15m", "1h", "4h", "1d"]
-        return [t.strip() for t in raw.split(",") if t.strip()]
+            return ["15m", "1h"]
+        blocked = set(self.advisor_blocked_timeframes)
+        return [t.strip() for t in raw.split(",") if t.strip() and t.strip() not in blocked]
+
+    @property
+    def advisor_allowed_directions(self) -> frozenset[str]:
+        raw = self.ADVISOR_ALLOWED_DIRECTIONS_RAW.strip()
+        if not raw or raw.upper() == "ALL":
+            return frozenset({"BUY", "SELL"})
+        return frozenset(d.strip().upper() for d in raw.split(",") if d.strip())
+
+    @property
+    def advisor_blocked_timeframes(self) -> frozenset[str]:
+        raw = self.ADVISOR_BLOCKED_TIMEFRAMES_RAW.strip()
+        if not raw:
+            return frozenset()
+        return frozenset(t.strip() for t in raw.split(",") if t.strip())
+
+    @property
+    def advisor_symbol_allowlist(self) -> frozenset[str] | None:
+        raw = self.ADVISOR_SYMBOL_ALLOWLIST_RAW.strip()
+        if not raw:
+            return None
+        return frozenset(s.strip().upper() for s in raw.split(",") if s.strip())
+
+    @property
+    def advisor_publish_priority_symbols(self) -> list[str]:
+        raw = self.ADVISOR_PUBLISH_PRIORITY_SYMBOLS_RAW.strip()
+        if not raw:
+            return []
+        return [s.strip().upper() for s in raw.split(",") if s.strip()]
+
+    @property
+    def advisor_sell_allowed_timeframes(self) -> frozenset[str]:
+        raw = self.ADVISOR_SELL_ALLOWED_TIMEFRAMES_RAW.strip()
+        if not raw:
+            return frozenset()
+        return frozenset(t.strip() for t in raw.split(",") if t.strip())
 
     @property
     def advisor_output_path(self) -> Path:
