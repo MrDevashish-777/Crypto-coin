@@ -32,6 +32,70 @@ def _is_swing_timeframe(timeframe: str) -> bool:
     return timeframe in ("4h", "1d") or infer_trade_horizon(timeframe) == "swing"
 
 
+def _is_15m(timeframe: str) -> bool:
+    return timeframe == "15m"
+
+
+def _is_1h_intraday(timeframe: str) -> bool:
+    return timeframe == "1h"
+
+
+def _is_4h(timeframe: str) -> bool:
+    return timeframe == "4h"
+
+
+def _is_1d(timeframe: str) -> bool:
+    return timeframe == "1d"
+
+
+def _swing_profile(
+    base: PublishThresholds,
+    *,
+    min_confidence: float,
+    min_composite: float,
+    min_mtf: float,
+    min_confluence_hits: int,
+    min_agreeing_sources: int,
+    min_vote_margin: float,
+    min_quality_tier: str,
+) -> PublishThresholds:
+    return PublishThresholds(
+        min_confidence=min_confidence,
+        min_composite=min_composite,
+        min_mtf=min_mtf,
+        min_confluence_hits=min_confluence_hits,
+        min_quality_tier=min_quality_tier,
+        min_agreeing_sources=min_agreeing_sources,
+        min_vote_margin=min_vote_margin,
+        strict_htf=True,
+        require_swing_reachability=True,
+    )
+
+
+def _intraday_profile(
+    base: PublishThresholds,
+    *,
+    min_confidence: float,
+    min_composite: float,
+    min_mtf: float,
+    min_confluence_hits: int,
+    min_agreeing_sources: int,
+    min_vote_margin: float,
+    min_quality_tier: str,
+) -> PublishThresholds:
+    return PublishThresholds(
+        min_confidence=min_confidence,
+        min_composite=min_composite,
+        min_mtf=min_mtf,
+        min_confluence_hits=min_confluence_hits,
+        min_quality_tier=min_quality_tier,
+        min_agreeing_sources=min_agreeing_sources,
+        min_vote_margin=min_vote_margin,
+        strict_htf=False,
+        require_swing_reachability=False,
+    )
+
+
 def get_publish_thresholds(direction: Direction, timeframe: str) -> PublishThresholds:
     """
     SOP baseline (1h BUY intraday) with stricter overlays for historically weak segments.
@@ -53,6 +117,66 @@ def get_publish_thresholds(direction: Direction, timeframe: str) -> PublishThres
         require_swing_reachability=False,
     )
 
+    if _is_15m(timeframe):
+        tier = (
+            settings.ADVISOR_BUY_PUBLISH_MIN_QUALITY_TIER
+            if direction == "BUY"
+            else settings.ADVISOR_SELL_PUBLISH_MIN_QUALITY_TIER
+        )
+        return _intraday_profile(
+            base,
+            min_confidence=settings.ADVISOR_15M_MIN_CONFIDENCE,
+            min_composite=settings.ADVISOR_15M_MIN_COMPOSITE_SCORE,
+            min_mtf=settings.ADVISOR_15M_MIN_MTF_SCORE,
+            min_confluence_hits=settings.ADVISOR_15M_MIN_CONFLUENCE_HITS,
+            min_agreeing_sources=settings.ADVISOR_15M_MIN_AGREEING_SOURCES,
+            min_vote_margin=settings.ADVISOR_15M_MIN_VOTE_MARGIN,
+            min_quality_tier=tier,
+        )
+
+    if _is_1h_intraday(timeframe):
+        tier = (
+            settings.ADVISOR_BUY_PUBLISH_MIN_QUALITY_TIER
+            if direction == "BUY"
+            else settings.ADVISOR_SELL_PUBLISH_MIN_QUALITY_TIER
+        )
+        return _intraday_profile(
+            base,
+            min_confidence=settings.ADVISOR_1H_MIN_CONFIDENCE,
+            min_composite=settings.ADVISOR_1H_MIN_COMPOSITE_SCORE,
+            min_mtf=settings.ADVISOR_1H_MIN_MTF_SCORE,
+            min_confluence_hits=settings.ADVISOR_1H_MIN_CONFLUENCE_HITS,
+            min_agreeing_sources=settings.ADVISOR_1H_MIN_AGREEING_SOURCES,
+            min_vote_margin=settings.ADVISOR_1H_MIN_VOTE_MARGIN,
+            min_quality_tier=tier,
+        )
+
+    if _is_4h(timeframe):
+        tier = settings.ADVISOR_4H_PUBLISH_MIN_QUALITY_TIER
+        return _swing_profile(
+            base,
+            min_confidence=settings.ADVISOR_4H_MIN_CONFIDENCE,
+            min_composite=settings.ADVISOR_4H_MIN_COMPOSITE_SCORE,
+            min_mtf=settings.ADVISOR_4H_MIN_MTF_SCORE,
+            min_confluence_hits=settings.ADVISOR_4H_MIN_CONFLUENCE_HITS,
+            min_agreeing_sources=settings.ADVISOR_4H_MIN_AGREEING_SOURCES,
+            min_vote_margin=settings.ADVISOR_4H_MIN_VOTE_MARGIN,
+            min_quality_tier=tier,
+        )
+
+    if _is_1d(timeframe):
+        tier = settings.ADVISOR_1D_PUBLISH_MIN_QUALITY_TIER
+        return _swing_profile(
+            base,
+            min_confidence=settings.ADVISOR_1D_MIN_CONFIDENCE,
+            min_composite=settings.ADVISOR_1D_MIN_COMPOSITE_SCORE,
+            min_mtf=settings.ADVISOR_1D_MIN_MTF_SCORE,
+            min_confluence_hits=settings.ADVISOR_1D_MIN_CONFLUENCE_HITS,
+            min_agreeing_sources=settings.ADVISOR_1D_MIN_AGREEING_SOURCES,
+            min_vote_margin=settings.ADVISOR_1D_MIN_VOTE_MARGIN,
+            min_quality_tier=tier,
+        )
+
     if direction == "BUY" and not _is_swing_timeframe(timeframe):
         return PublishThresholds(
             min_confidence=min(base.min_confidence, settings.ADVISOR_BUY_MIN_CONFIDENCE),
@@ -66,7 +190,7 @@ def get_publish_thresholds(direction: Direction, timeframe: str) -> PublishThres
             require_swing_reachability=False,
         )
 
-    if direction == "SELL":
+    if direction == "SELL" and not _is_swing_timeframe(timeframe):
         return PublishThresholds(
             min_confidence=max(base.min_confidence, settings.ADVISOR_SELL_MIN_CONFIDENCE),
             min_composite=max(base.min_composite, settings.ADVISOR_SELL_MIN_COMPOSITE_SCORE),
@@ -75,29 +199,11 @@ def get_publish_thresholds(direction: Direction, timeframe: str) -> PublishThres
             min_quality_tier=settings.ADVISOR_SELL_PUBLISH_MIN_QUALITY_TIER,
             min_agreeing_sources=max(base.min_agreeing_sources, settings.ADVISOR_SELL_MIN_AGREEING_SOURCES),
             min_vote_margin=max(base.min_vote_margin, settings.ADVISOR_SELL_MIN_VOTE_MARGIN),
-            strict_htf=True,
-            require_swing_reachability=_is_swing_timeframe(timeframe),
-        )
-
-    if _is_swing_timeframe(timeframe):
-        return PublishThresholds(
-            min_confidence=max(base.min_confidence, settings.ADVISOR_SWING_MIN_CONFIDENCE),
-            min_composite=max(base.min_composite, settings.ADVISOR_SWING_MIN_COMPOSITE_SCORE),
-            min_mtf=max(base.min_mtf, settings.ADVISOR_SWING_MIN_MTF_SCORE),
-            min_confluence_hits=base.min_confluence_hits,
-            min_quality_tier=base.min_quality_tier,
-            min_agreeing_sources=max(base.min_agreeing_sources, settings.ADVISOR_SWING_MIN_AGREEING_SOURCES),
-            min_vote_margin=base.min_vote_margin,
-            strict_htf=True,
-            require_swing_reachability=True,
+            strict_htf=False,
+            require_swing_reachability=False,
         )
 
     return base
-
-
-def vote_thresholds_for_side(direction: Direction, timeframe: str) -> tuple[int, float]:
-    profile = get_publish_thresholds(direction, timeframe)
-    return profile.min_agreeing_sources, profile.min_vote_margin
 
 
 def validate_sell_regime(
@@ -105,12 +211,26 @@ def validate_sell_regime(
     *,
     adx: float | None,
     regime: MarketRegime | None,
+    timeframe: str = "1h",
 ) -> tuple[bool, str | None]:
     """SELL only when bearish structure is confirmed — avoids shorting bull trends."""
     if side != "SELL":
         return True, None
 
-    if adx is None or adx < settings.ADVISOR_SELL_MIN_ADX:
+    if _is_swing_timeframe(timeframe) and regime == MarketRegime.RANGING:
+        return False, "swing_sell_ranging_blocked"
+
+    min_adx = settings.ADVISOR_SELL_MIN_ADX
+    if _is_15m(timeframe):
+        min_adx = settings.ADVISOR_15M_SELL_MIN_ADX
+    elif _is_1h_intraday(timeframe):
+        min_adx = settings.ADVISOR_1H_SELL_MIN_ADX
+    elif timeframe == "4h":
+        min_adx = settings.ADVISOR_4H_SELL_MIN_ADX
+    elif timeframe == "1d":
+        min_adx = settings.ADVISOR_1D_SELL_MIN_ADX
+
+    if adx is None or adx < min_adx:
         return False, f"sell_adx_below_{adx or 0:.1f}"
 
     if regime == MarketRegime.TRENDING_UP:
@@ -120,6 +240,11 @@ def validate_sell_regime(
         return False, "sell_ranging_blocked"
 
     return True, None
+
+
+def vote_thresholds_for_side(direction: Direction, timeframe: str) -> tuple[int, float]:
+    profile = get_publish_thresholds(direction, timeframe)
+    return profile.min_agreeing_sources, profile.min_vote_margin
 
 
 def validate_tier_a(
@@ -132,8 +257,11 @@ def validate_tier_a(
     reach: ReachabilityResult,
     risk_reward_value: float,
 ) -> tuple[bool, str | None]:
-    """Tier A needs SOP high-confidence confirmation — fixes overconfident losing calls."""
+    """Tier A needs SOP high-confidence confirmation — swing only; intraday uses segment gates."""
     if tier != "A":
+        return True, None
+
+    if not _is_swing_timeframe(timeframe):
         return True, None
 
     if features.pre_confidence < settings.SOP_HIGH_CONF_THRESHOLD:
@@ -157,6 +285,23 @@ def validate_tier_a(
         if mtf_score < settings.ADVISOR_SWING_MIN_MTF_SCORE:
             return False, f"tier_a_swing_mtf_{mtf_score:.2f}"
 
+    return True, None
+
+
+def passes_high_accuracy_mode(
+    features: ConfluenceFeatures,
+    *,
+    composite_score: float,
+) -> tuple[bool, str | None]:
+    """Extra publish floor when ADVISOR_HIGH_ACCURACY_MODE is enabled."""
+    if not settings.ADVISOR_HIGH_ACCURACY_MODE:
+        return True, None
+    if len(features.confluence_hits) < settings.ADVISOR_HIGH_ACCURACY_MIN_CONFLUENCE_HITS:
+        return False, f"high_accuracy_hits_{len(features.confluence_hits)}"
+    if features.agreeing_sources < settings.ADVISOR_HIGH_ACCURACY_MIN_AGREEING_SOURCES:
+        return False, f"high_accuracy_sources_{features.agreeing_sources}"
+    if composite_score < settings.ADVISOR_QUALITY_TIER_A_MIN:
+        return False, f"high_accuracy_composite_{composite_score:.2f}"
     return True, None
 
 
@@ -189,6 +334,8 @@ def mtf_min_agreeing_for(direction: Direction, timeframe: str) -> int:
     if htfs_count == 0:
         return 0
     if direction == "BUY" and not _is_swing_timeframe(timeframe):
+        return 1
+    if direction == "SELL" and not _is_swing_timeframe(timeframe):
         return 1
     if direction == "SELL" or _is_swing_timeframe(timeframe):
         return htfs_count

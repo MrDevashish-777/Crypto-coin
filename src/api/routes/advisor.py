@@ -117,5 +117,6 @@ async def advisor_health():
         "daily_published": len(daily),
         "daily_cap": settings.MAX_DAILY_SIGNALS,
         "daily_target": settings.ADVISOR_TARGET_DAILY_SIGNALS,
+        "allocation": proc.allocation.allocation_summary(),
         "margin": proc.margin_currency,
     }

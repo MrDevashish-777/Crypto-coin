@@ -136,6 +136,19 @@ def create_app() -> FastAPI:
 
     @app.on_event("startup")
     async def startup_event():
+        import config.settings as settings_mod
+        from config.settings import get_settings
+
+        get_settings.cache_clear()
+        settings_mod.settings = get_settings()
+        active = settings_mod.settings
+        logger.info(
+            "Advisor scan: timeframes=%s directions=%s sell_tfs=%s allowlist=%s",
+            active.advisor_scan_timeframes,
+            sorted(active.advisor_allowed_directions),
+            sorted(active.advisor_sell_allowed_timeframes) or "none",
+            len(active.advisor_symbol_allowlist or ()),
+        )
         logger.info("=" * 60)
         logger.info("Starting %s", settings.APP_NAME)
         logger.info("=" * 60)
@@ -162,18 +175,11 @@ def create_app() -> FastAPI:
             logger.info("LLM provider: %s", settings.LLM_PROVIDER)
 
         if settings.ENABLE_BACKGROUND_SCANNER:
-            logger.info("Starting advisor background scanner...")
-            asyncio.create_task(advisor_market_scanner())
-            logger.info("Starting reinforcement learning background optimizer...")
-            asyncio.create_task(advisor_weight_optimizer())
+            logger.info("Background scanner is enabled in config, but runs via scripts/run_workers.py")
         else:
             logger.info("Background scanner disabled (ENABLE_BACKGROUND_SCANNER=false)")
 
-        logger.info("Starting open-signal reconciliation loop...")
-        asyncio.create_task(advisor_signal_reconciler())
 
-        if settings.ADVISOR_RECONCILE_ON_STARTUP:
-            asyncio.create_task(_startup_reconcile_open_signals())
 
         logger.info("Application startup complete")
 
@@ -183,71 +189,7 @@ def create_app() -> FastAPI:
         shutdown_event.set()
         await shutdown_advisor_processor()
 
-    async def advisor_market_scanner():
-        processor = await get_advisor_processor()
-        scan_interval = max(settings.SCAN_INTERVAL, 300)
-        while not shutdown_event.is_set():
-            try:
-                logger.info("Advisor scanner: starting universe scan...")
-                results = await processor.scan_universe()
-                published = sum(
-                    1 for r in results if r.get("phase") == "publish" and r.get("ok")
-                )
-                logger.info("Advisor scanner: published %d signals", published)
-            except Exception as exc:
-                logger.exception("Advisor scanner error: %s", exc)
-            try:
-                await asyncio.wait_for(shutdown_event.wait(), timeout=scan_interval)
-            except asyncio.TimeoutError:
-                pass
 
-    async def advisor_signal_reconciler():
-        interval = max(settings.ADVISOR_RECONCILE_INTERVAL, 60)
-        processor = await get_advisor_processor()
-        while not shutdown_event.is_set():
-            try:
-                from src.advisor.persistence import reconcile_all_open_signals
-
-                closed = await reconcile_all_open_signals(fetcher=processor.data_fetcher)
-                if closed:
-                    logger.info("Signal reconciler: closed %d open signals", closed)
-            except Exception as exc:
-                logger.exception("Signal reconciler error: %s", exc)
-            try:
-                await asyncio.wait_for(shutdown_event.wait(), timeout=interval)
-            except asyncio.TimeoutError:
-                pass
-
-    async def _startup_reconcile_open_signals():
-        try:
-            from src.advisor.persistence import reconcile_all_open_signals
-
-            processor = await get_advisor_processor()
-            closed = await reconcile_all_open_signals(fetcher=processor.data_fetcher)
-            logger.info("Startup reconciliation: closed %d open signals", closed)
-        except Exception as exc:
-            logger.exception("Startup signal reconciliation failed: %s", exc)
-
-    async def advisor_weight_optimizer():
-        from src.analysis.learning_engine import WeightOptimizer
-        optimizer = WeightOptimizer()
-        # Initial wait so we don't block immediate startup
-        try:
-            await asyncio.wait_for(shutdown_event.wait(), timeout=300)
-        except asyncio.TimeoutError:
-            pass
-
-        while not shutdown_event.is_set():
-            try:
-                logger.info("Weight optimizer: running RL tuning loop...")
-                await optimizer.run_optimization(days=30)
-            except Exception as exc:
-                logger.exception("Weight optimizer error: %s", exc)
-            try:
-                # Run once a day (86400 seconds)
-                await asyncio.wait_for(shutdown_event.wait(), timeout=86400)
-            except asyncio.TimeoutError:
-                pass
 
     return app
 

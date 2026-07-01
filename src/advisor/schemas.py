@@ -72,6 +72,13 @@ class AdvisorSignal(BaseModel):
         if not (0.5 <= width_pct <= 1.5):
             raise ValueError(f"entry band width {width_pct:.2f}% outside SOP 0.5-1.5%")
 
+        if not (2.5 <= self.sl_pct <= 3.0 + 0.15):
+            raise ValueError(f"sl_pct {self.sl_pct:.2f}% outside SOP 2.5-3.0%")
+
+        lev_sl = self.sl_pct * self.leverage
+        if not (17.5 <= lev_sl <= 22.5):
+            raise ValueError(f"leveraged SL {lev_sl:.1f}% outside SOP 18-22%")
+
         if not (low <= self.live_price_at_signal <= high):
             raise ValueError("live price must be inside entry range at signal time")
 
@@ -84,6 +91,13 @@ class AdvisorSignal(BaseModel):
 
         if not re.match(r"^1:\d+(\.\d+)?$", self.risk_reward.strip()):
             raise ValueError("risk_reward must match 1:X")
+
+        try:
+            rr_val = float(self.risk_reward.split(":", 1)[1])
+        except (IndexError, ValueError) as exc:
+            raise ValueError("risk_reward must be parseable 1:X") from exc
+        if rr_val < 1.5:
+            raise ValueError("risk_reward must be at least 1:1.5 per SOP")
 
         lev_expected = 20.0 / self.sl_pct
         if abs(self.leverage - lev_expected) > 0.5:

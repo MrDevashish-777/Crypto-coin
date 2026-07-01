@@ -64,6 +64,17 @@ def expected_move_pct(
     return multiplier * atr_pct * time_scale
 
 
+def reachability_k_for_symbol(symbol: str, *, trade_horizon: TradeHorizon) -> float:
+    """Majors (BTC/ETH/SOL) often need slightly wider reachability on low-ATR bars."""
+    from config.constants import MAJOR_SYMBOLS
+
+    if trade_horizon == "swing":
+        return settings.ADVISOR_SWING_REACHABILITY_K
+    if symbol.upper() in MAJOR_SYMBOLS:
+        return settings.ADVISOR_MAJORS_REACHABILITY_K
+    return settings.ADVISOR_REACHABILITY_K
+
+
 def check_tp_reachability(
     *,
     entry_mid: float,
@@ -74,6 +85,7 @@ def check_tp_reachability(
     trade_horizon: TradeHorizon,
     generated_at: datetime | None = None,
     swing_days: int = 3,
+    symbol: str | None = None,
 ) -> ReachabilityResult:
     """Return whether TP distance is reachable within the given validity horizon."""
     if not settings.ADVISOR_REACHABILITY_GATE_ENABLED:
@@ -95,11 +107,13 @@ def check_tp_reachability(
         swing_days=swing_days,
     )
     tp_distance_pct = abs(target - entry_mid) / max(entry_mid, 1e-9) * 100.0
+    reach_k = reachability_k_for_symbol(symbol or "", trade_horizon=trade_horizon)
     expected = expected_move_pct(
         atr,
         price,
         timeframe=timeframe,
         hours_until_expiry=hours,
+        k=reach_k,
     )
     ok = tp_distance_pct <= expected
     reason = None
@@ -180,14 +194,57 @@ def reachability_from_levels(
     price: float,
     timeframe: str,
     generated_at: datetime | None = None,
+    swing_days: int | None = None,
+    symbol: str | None = None,
 ) -> ReachabilityResult:
     """Convenience wrapper using computed advisor levels dict."""
+    from src.advisor.validity import infer_swing_days
+
     entry_mid = (float(levels["entry_low"]) + float(levels["entry_high"])) / 2.0
-    return resolve_reachability(
+    days = swing_days if swing_days is not None else infer_swing_days(timeframe)
+    at = (generated_at or datetime.now(tz=IST)).astimezone(IST)
+    default_horizon = infer_trade_horizon(timeframe)
+
+    intraday = check_tp_reachability(
         entry_mid=entry_mid,
         target=float(levels["target"]),
         atr=atr,
         price=price,
         timeframe=timeframe,
-        generated_at=generated_at,
+        trade_horizon="intraday",
+        generated_at=at,
+        swing_days=days,
+        symbol=symbol,
     )
+    if intraday.ok:
+        return intraday
+
+    if default_horizon == "swing":
+        return check_tp_reachability(
+            entry_mid=entry_mid,
+            target=float(levels["target"]),
+            atr=atr,
+            price=price,
+            timeframe=timeframe,
+            trade_horizon="swing",
+            generated_at=at,
+            swing_days=days,
+            symbol=symbol,
+        )
+
+    if settings.ADVISOR_REACHABILITY_AUTO_SWING:
+        swing = check_tp_reachability(
+            entry_mid=entry_mid,
+            target=float(levels["target"]),
+            atr=atr,
+            price=price,
+            timeframe=timeframe,
+            trade_horizon="swing",
+            generated_at=at,
+            swing_days=days,
+            symbol=symbol,
+        )
+        if swing.ok:
+            return swing
+
+    return intraday

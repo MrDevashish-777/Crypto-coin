@@ -53,21 +53,43 @@ class Settings(BaseSettings):
     MAX_DAILY_SIGNALS: int = int(os.getenv("MAX_DAILY_SIGNALS", "25"))
     MAX_PUBLISH_PER_SCAN: int = int(os.getenv("MAX_PUBLISH_PER_SCAN", "8"))
     ADVISOR_TARGET_DAILY_SIGNALS: int = int(os.getenv("ADVISOR_TARGET_DAILY_SIGNALS", "10"))
+    ADVISOR_MIN_SWING_PUBLISH_PER_SCAN: int = int(
+        os.getenv("ADVISOR_MIN_SWING_PUBLISH_PER_SCAN", "2")
+    )
     MIN_WEEKLY_BTC_PCT: float = float(os.getenv("MIN_WEEKLY_BTC_PCT", "0.20"))
     MIN_WEEKLY_MAJORS_PCT: float = float(os.getenv("MIN_WEEKLY_MAJORS_PCT", "0.35"))
+    MAX_WEEKLY_MAJORS_PCT: float = float(os.getenv("MAX_WEEKLY_MAJORS_PCT", "0.40"))
     ADVISOR_STRICT_ALLOCATION: bool = os.getenv("ADVISOR_STRICT_ALLOCATION", "true").lower() == "true"
+    ADVISOR_BLOCK_LOW_CAP_SYMBOLS: bool = (
+        os.getenv("ADVISOR_BLOCK_LOW_CAP_SYMBOLS", "true").lower() == "true"
+    )
     ADVISOR_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_MIN_CONFIDENCE", "0.75"))
     ADVISOR_OUTPUT_DIR: str = os.getenv("ADVISOR_OUTPUT_DIR", "output/reports")
     ADVISOR_MIN_CONFLUENCE_HITS: int = int(os.getenv("ADVISOR_MIN_CONFLUENCE_HITS", "4"))
     ADVISOR_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_MIN_AGREEING_SOURCES", "5"))
     ADVISOR_MIN_VOTE_MARGIN: float = float(os.getenv("ADVISOR_MIN_VOTE_MARGIN", "0.18"))
     ADVISOR_SYMBOL_COOLDOWN_HOURS: int = int(os.getenv("ADVISOR_SYMBOL_COOLDOWN_HOURS", "2"))
+    ADVISOR_SYMBOL_COOLDOWN_HOURS_15M: int = int(
+        os.getenv("ADVISOR_SYMBOL_COOLDOWN_HOURS_15M", os.getenv("ADVISOR_SYMBOL_COOLDOWN_HOURS", "2"))
+    )
+    ADVISOR_SYMBOL_COOLDOWN_HOURS_4H: int = int(
+        os.getenv("ADVISOR_SYMBOL_COOLDOWN_HOURS_4H", os.getenv("ADVISOR_SYMBOL_COOLDOWN_HOURS", "4"))
+    )
+    ADVISOR_SYMBOL_COOLDOWN_HOURS_1D: int = int(
+        os.getenv("ADVISOR_SYMBOL_COOLDOWN_HOURS_1D", os.getenv("ADVISOR_SYMBOL_COOLDOWN_HOURS", "12"))
+    )
+    ADVISOR_BLOCK_OPEN_SAME_DIRECTION_ONLY: bool = (
+        os.getenv("ADVISOR_BLOCK_OPEN_SAME_DIRECTION_ONLY", "true").lower() == "true"
+    )
+    ADVISOR_POSITIVE_BUCKET_RANK_BOOST: bool = (
+        os.getenv("ADVISOR_POSITIVE_BUCKET_RANK_BOOST", "true").lower() == "true"
+    )
     ADVISOR_ALLOW_MULTI_TF_PER_SYMBOL: bool = (
         os.getenv("ADVISOR_ALLOW_MULTI_TF_PER_SYMBOL", "true").lower() == "true"
     )
     ADVISOR_PUBLISH_PRIORITY_SYMBOLS_RAW: str = os.getenv(
         "ADVISOR_PUBLISH_PRIORITY_SYMBOLS",
-        "SOL,XRP,ARB,INJ,TIA,LINK,ATOM,AVAX,UNI,FIL,ADA,OP,NEAR,SUI,SEI",
+        "BTC,ETH,SOL,BNB,XRP,AVAX,LINK,ARB,OP,ATOM,SUI,ADA,DOGE,DOT,NEAR,UNI,APT,INJ,TIA,SEI,FIL,AAVE,BCH,LTC,POL",
     )
     # Relaxed gates for BUY-only high-volume mode (SELL blocked separately)
     ADVISOR_BUY_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_BUY_MIN_CONFIDENCE", "0.68"))
@@ -79,6 +101,20 @@ class Settings(BaseSettings):
     ADVISOR_BUY_PUBLISH_MIN_QUALITY_TIER: str = os.getenv(
         "ADVISOR_BUY_PUBLISH_MIN_QUALITY_TIER", "C"
     ).upper()
+    # 15m — high-volume positive-R segment (live ~90% WR on 15m)
+    ADVISOR_15M_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_15M_MIN_CONFIDENCE", "0.68"))
+    ADVISOR_15M_MIN_COMPOSITE_SCORE: float = float(os.getenv("ADVISOR_15M_MIN_COMPOSITE_SCORE", "0.74"))
+    ADVISOR_15M_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_15M_MIN_MTF_SCORE", "0.48"))
+    ADVISOR_15M_MIN_CONFLUENCE_HITS: int = int(os.getenv("ADVISOR_15M_MIN_CONFLUENCE_HITS", "2"))
+    ADVISOR_15M_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_15M_MIN_AGREEING_SOURCES", "2"))
+    ADVISOR_15M_MIN_VOTE_MARGIN: float = float(os.getenv("ADVISOR_15M_MIN_VOTE_MARGIN", "0.06"))
+    # 1h — tighter than 15m (live 1h underperformed)
+    ADVISOR_1H_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_1H_MIN_CONFIDENCE", "0.74"))
+    ADVISOR_1H_MIN_COMPOSITE_SCORE: float = float(os.getenv("ADVISOR_1H_MIN_COMPOSITE_SCORE", "0.80"))
+    ADVISOR_1H_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_1H_MIN_MTF_SCORE", "0.55"))
+    ADVISOR_1H_MIN_CONFLUENCE_HITS: int = int(os.getenv("ADVISOR_1H_MIN_CONFLUENCE_HITS", "3"))
+    ADVISOR_1H_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_1H_MIN_AGREEING_SOURCES", "3"))
+    ADVISOR_1H_MIN_VOTE_MARGIN: float = float(os.getenv("ADVISOR_1H_MIN_VOTE_MARGIN", "0.09"))
     ADVISOR_SCAN_TIMEFRAMES_RAW: str = Field(
         default="1h,4h,1d",
         validation_alias=AliasChoices("ADVISOR_SCAN_TIMEFRAMES", "ADVISOR_SCAN_TIMEFRAMES_RAW"),
@@ -88,10 +124,13 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("ADVISOR_ALLOWED_DIRECTIONS", "ADVISOR_ALLOWED_DIRECTIONS_RAW"),
     )
     ADVISOR_BLOCKED_TIMEFRAMES_RAW: str = Field(
-        default="",
+        default="1m,5m,15m,30m",
         validation_alias=AliasChoices("ADVISOR_BLOCKED_TIMEFRAMES", "ADVISOR_BLOCKED_TIMEFRAMES_RAW"),
     )
-    ADVISOR_SYMBOL_ALLOWLIST_RAW: str = os.getenv("ADVISOR_SYMBOL_ALLOWLIST", "")
+    ADVISOR_SYMBOL_ALLOWLIST_RAW: str = Field(
+        default="",
+        validation_alias=AliasChoices("ADVISOR_SYMBOL_ALLOWLIST", "ADVISOR_SYMBOL_ALLOWLIST_RAW"),
+    )
     ADVISOR_BLOCK_SWING_HORIZON: bool = (
         os.getenv("ADVISOR_BLOCK_SWING_HORIZON", "false").lower() == "true"
     )
@@ -108,6 +147,12 @@ class Settings(BaseSettings):
         "ADVISOR_SELL_PUBLISH_MIN_QUALITY_TIER", "B"
     ).upper()
     ADVISOR_SELL_MIN_ADX: float = float(os.getenv("ADVISOR_SELL_MIN_ADX", "26"))
+    ADVISOR_15M_SELL_MIN_ADX: float = float(
+        os.getenv("ADVISOR_15M_SELL_MIN_ADX", os.getenv("PLANITT_15M_ADX_THRESHOLD", "16"))
+    )
+    ADVISOR_1H_SELL_MIN_ADX: float = float(
+        os.getenv("ADVISOR_1H_SELL_MIN_ADX", os.getenv("PLANITT_1H_ADX_THRESHOLD", "18"))
+    )
     ADVISOR_SELL_ALLOW_RANGING: bool = os.getenv("ADVISOR_SELL_ALLOW_RANGING", "false").lower() == "true"
     ADVISOR_SELL_MIN_DI_SPREAD: float = float(os.getenv("ADVISOR_SELL_MIN_DI_SPREAD", "3.0"))
     ADVISOR_REQUIRE_BTC_BEAR_FOR_SELL: bool = (
@@ -127,12 +172,92 @@ class Settings(BaseSettings):
     ADVISOR_SWING_MIN_COMPOSITE_SCORE: float = float(os.getenv("ADVISOR_SWING_MIN_COMPOSITE_SCORE", "0.82"))
     ADVISOR_SWING_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_SWING_MIN_MTF_SCORE", "0.85"))
     ADVISOR_SWING_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_SWING_MIN_AGREEING_SOURCES", "5"))
+    ADVISOR_SWING_REQUIRE_STRUCTURE: bool = (
+        os.getenv("ADVISOR_SWING_REQUIRE_STRUCTURE", "true").lower() == "true"
+    )
+    ADVISOR_REQUIRE_BTC_BULL_FOR_SWING_BUY: bool = (
+        os.getenv("ADVISOR_REQUIRE_BTC_BULL_FOR_SWING_BUY", "true").lower() == "true"
+    )
+    # 4h swing — selective (live: only XRP_4h_SELL was positive)
+    ADVISOR_4H_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_4H_MIN_CONFIDENCE", "0.78"))
+    ADVISOR_4H_MIN_COMPOSITE_SCORE: float = float(os.getenv("ADVISOR_4H_MIN_COMPOSITE_SCORE", "0.86"))
+    ADVISOR_4H_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_4H_MIN_MTF_SCORE", "0.82"))
+    ADVISOR_4H_MIN_CONFLUENCE_HITS: int = int(os.getenv("ADVISOR_4H_MIN_CONFLUENCE_HITS", "4"))
+    ADVISOR_4H_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_4H_MIN_AGREEING_SOURCES", "4"))
+    ADVISOR_4H_MIN_VOTE_MARGIN: float = float(os.getenv("ADVISOR_4H_MIN_VOTE_MARGIN", "0.14"))
+    ADVISOR_4H_SELL_MIN_ADX: float = float(os.getenv("ADVISOR_4H_SELL_MIN_ADX", "24"))
+    ADVISOR_4H_PUBLISH_MIN_QUALITY_TIER: str = os.getenv("ADVISOR_4H_PUBLISH_MIN_QUALITY_TIER", "B").upper()
+    # 1d swing — highest bar (live 1d was deeply negative)
+    ADVISOR_1D_MIN_CONFIDENCE: float = float(os.getenv("ADVISOR_1D_MIN_CONFIDENCE", "0.82"))
+    ADVISOR_1D_MIN_COMPOSITE_SCORE: float = float(os.getenv("ADVISOR_1D_MIN_COMPOSITE_SCORE", "0.88"))
+    ADVISOR_1D_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_1D_MIN_MTF_SCORE", "0.88"))
+    ADVISOR_1D_MIN_CONFLUENCE_HITS: int = int(os.getenv("ADVISOR_1D_MIN_CONFLUENCE_HITS", "5"))
+    ADVISOR_1D_MIN_AGREEING_SOURCES: int = int(os.getenv("ADVISOR_1D_MIN_AGREEING_SOURCES", "5"))
+    ADVISOR_1D_MIN_VOTE_MARGIN: float = float(os.getenv("ADVISOR_1D_MIN_VOTE_MARGIN", "0.16"))
+    ADVISOR_1D_SELL_MIN_ADX: float = float(os.getenv("ADVISOR_1D_SELL_MIN_ADX", "26"))
+    ADVISOR_1D_PUBLISH_MIN_QUALITY_TIER: str = os.getenv("ADVISOR_1D_PUBLISH_MIN_QUALITY_TIER", "A").upper()
+    SOP_SWING_MIN_RR: float = float(os.getenv("SOP_SWING_MIN_RR", "1.8"))
+    ADVISOR_SWING_REACHABILITY_K: float = float(
+        os.getenv("ADVISOR_SWING_REACHABILITY_K", os.getenv("ADVISOR_REACHABILITY_K", "1.0"))
+    )
+    ADVISOR_SWING_SELL_MIN_DI_SPREAD: float = float(
+        os.getenv("ADVISOR_SWING_SELL_MIN_DI_SPREAD", "2.5")
+    )
+    # Adaptive bot — tune levels/ranking from regime + live buckets (no extra hard blocks)
+    ADVISOR_ADAPTIVE_MACRO_SCORING: bool = (
+        os.getenv("ADVISOR_ADAPTIVE_MACRO_SCORING", "true").lower() == "true"
+    )
+    ADVISOR_ADAPTIVE_VOL_STOPS: bool = (
+        os.getenv("ADVISOR_ADAPTIVE_VOL_STOPS", "true").lower() == "true"
+    )
+    ADVISOR_ADAPTIVE_BUCKET_LEVELS: bool = (
+        os.getenv("ADVISOR_ADAPTIVE_BUCKET_LEVELS", "true").lower() == "true"
+    )
+    ADVISOR_ADAPTIVE_BUCKET_RANKING: bool = (
+        os.getenv("ADVISOR_ADAPTIVE_BUCKET_RANKING", "true").lower() == "true"
+    )
+    ADVISOR_ADAPTIVE_BUCKET_MIN_TRADES: int = int(
+        os.getenv("ADVISOR_ADAPTIVE_BUCKET_MIN_TRADES", "3")
+    )
+    ADVISOR_MACRO_ALIGNMENT_WEIGHT: float = float(
+        os.getenv("ADVISOR_MACRO_ALIGNMENT_WEIGHT", "0.10")
+    )
+    ADVISOR_VOL_SL_SCALE_MAX: float = float(os.getenv("ADVISOR_VOL_SL_SCALE_MAX", "1.30"))
+    ADVISOR_BUCKET_SL_WIDEN_ON_NEGATIVE: float = float(
+        os.getenv("ADVISOR_BUCKET_SL_WIDEN_ON_NEGATIVE", "0.12")
+    )
+    ADVISOR_BUCKET_TP_TRIM_ON_NEGATIVE: float = float(
+        os.getenv("ADVISOR_BUCKET_TP_TRIM_ON_NEGATIVE", "0.10")
+    )
+    ADVISOR_RANGING_SL_SCALE: float = float(os.getenv("ADVISOR_RANGING_SL_SCALE", "1.15"))
+    ADVISOR_RANGING_TP_SCALE: float = float(os.getenv("ADVISOR_RANGING_TP_SCALE", "0.92"))
+    ADVISOR_VOLATILE_SL_SCALE: float = float(os.getenv("ADVISOR_VOLATILE_SL_SCALE", "1.12"))
+    ADVISOR_VOLATILE_TP_SCALE: float = float(os.getenv("ADVISOR_VOLATILE_TP_SCALE", "0.95"))
+    ADVISOR_BLOCK_NEGATIVE_BUCKETS: bool = (
+        os.getenv("ADVISOR_BLOCK_NEGATIVE_BUCKETS", "false").lower() == "true"
+    )
     ADVISOR_LIVE_PERFORMANCE_GATE_ENABLED: bool = (
         os.getenv("ADVISOR_LIVE_PERFORMANCE_GATE_ENABLED", "true").lower() == "true"
     )
     ADVISOR_LIVE_MIN_BUCKET_TRADES: int = int(os.getenv("ADVISOR_LIVE_MIN_BUCKET_TRADES", "2"))
     ADVISOR_LIVE_MIN_BUCKET_EXPECTANCY: float = float(
         os.getenv("ADVISOR_LIVE_MIN_BUCKET_EXPECTANCY", "0.0")
+    )
+    ADVISOR_LIVE_MIN_BUCKET_WIN_RATE: float = float(
+        os.getenv("ADVISOR_LIVE_MIN_BUCKET_WIN_RATE", "0.0")
+    )
+    ADVISOR_MIN_WEEKLY_SIGNALS: int = int(os.getenv("ADVISOR_MIN_WEEKLY_SIGNALS", "14"))
+    ADVISOR_HIGH_ACCURACY_MODE: bool = (
+        os.getenv("ADVISOR_HIGH_ACCURACY_MODE", "false").lower() == "true"
+    )
+    ADVISOR_HIGH_ACCURACY_MIN_CONFLUENCE_HITS: int = int(
+        os.getenv("ADVISOR_HIGH_ACCURACY_MIN_CONFLUENCE_HITS", "5")
+    )
+    ADVISOR_HIGH_ACCURACY_MIN_AGREEING_SOURCES: int = int(
+        os.getenv("ADVISOR_HIGH_ACCURACY_MIN_AGREEING_SOURCES", "7")
+    )
+    ADVISOR_HIGH_ACCURACY_MIN_VOTE_MARGIN: float = float(
+        os.getenv("ADVISOR_HIGH_ACCURACY_MIN_VOTE_MARGIN", "0.14")
     )
     ADVISOR_BACKTEST_QUALITY_GATE_ENABLED: bool = (
         os.getenv("ADVISOR_BACKTEST_QUALITY_GATE_ENABLED", "false").lower() == "true"
@@ -146,9 +271,14 @@ class Settings(BaseSettings):
     ADVISOR_MIN_MTF_SCORE: float = float(os.getenv("ADVISOR_MIN_MTF_SCORE", "0.70"))
     ADVISOR_PUBLISH_MIN_QUALITY_TIER: str = os.getenv("ADVISOR_PUBLISH_MIN_QUALITY_TIER", "B").upper()
     ADVISOR_MTF_SCORE_WEIGHT: float = float(os.getenv("ADVISOR_MTF_SCORE_WEIGHT", "0.20"))
-    ADVISOR_BLOCK_NEGATIVE_BUCKETS: bool = (
-        os.getenv("ADVISOR_BLOCK_NEGATIVE_BUCKETS", "true").lower() == "true"
+    # SMC FVG + Order Block big-move mode
+    ADVISOR_SMC_FVG_OB_ENABLED: bool = os.getenv("ADVISOR_SMC_FVG_OB_ENABLED", "true").lower() == "true"
+    ADVISOR_SMC_LIQUIDITY_TP_ENABLED: bool = (
+        os.getenv("ADVISOR_SMC_LIQUIDITY_TP_ENABLED", "true").lower() == "true"
     )
+    ADVISOR_SMC_BIG_MOVE_MIN_RR: float = float(os.getenv("ADVISOR_SMC_BIG_MOVE_MIN_RR", "2.0"))
+    ADVISOR_SMC_SETUP_LOOKBACK_BARS: int = int(os.getenv("ADVISOR_SMC_SETUP_LOOKBACK_BARS", "30"))
+    ADVISOR_SMC_ZONE_ATR_PAD: float = float(os.getenv("ADVISOR_SMC_ZONE_ATR_PAD", "0.35"))
     ADVISOR_POSITIVE_BUCKETS_ONLY: bool = (
         os.getenv("ADVISOR_POSITIVE_BUCKETS_ONLY", "false").lower() == "true"
     )
@@ -157,6 +287,9 @@ class Settings(BaseSettings):
         os.getenv("ADVISOR_REACHABILITY_GATE_ENABLED", "true").lower() == "true"
     )
     ADVISOR_REACHABILITY_K: float = float(os.getenv("ADVISOR_REACHABILITY_K", "1.2"))
+    ADVISOR_MAJORS_REACHABILITY_K: float = float(
+        os.getenv("ADVISOR_MAJORS_REACHABILITY_K", os.getenv("ADVISOR_REACHABILITY_K", "1.2"))
+    )
     ADVISOR_REACHABILITY_AUTO_SWING: bool = (
         os.getenv("ADVISOR_REACHABILITY_AUTO_SWING", "true").lower() == "true"
     )
@@ -185,7 +318,19 @@ class Settings(BaseSettings):
 
     # Confluence engine tunables (used by src/planitt/confluence.py)
     PLANITT_MIN_CANDLES: int = int(os.getenv("PLANITT_MIN_CANDLES", "205"))
-    PLANITT_ADX_TREND_THRESHOLD: float = float(os.getenv("PLANITT_ADX_TREND_THRESHOLD", "20"))
+    PLANITT_ADX_TREND_THRESHOLD: float = float(os.getenv("PLANITT_ADX_TREND_THRESHOLD", "18"))
+    PLANITT_15M_ADX_THRESHOLD: float = float(
+        os.getenv("PLANITT_15M_ADX_THRESHOLD", os.getenv("PLANITT_ADX_TREND_THRESHOLD", "14"))
+    )
+    PLANITT_1H_ADX_THRESHOLD: float = float(
+        os.getenv("PLANITT_1H_ADX_THRESHOLD", os.getenv("PLANITT_ADX_TREND_THRESHOLD", "16"))
+    )
+    PLANITT_4H_ADX_THRESHOLD: float = float(
+        os.getenv("PLANITT_4H_ADX_THRESHOLD", os.getenv("PLANITT_ADX_TREND_THRESHOLD", "20"))
+    )
+    PLANITT_1D_ADX_THRESHOLD: float = float(
+        os.getenv("PLANITT_1D_ADX_THRESHOLD", os.getenv("PLANITT_ADX_TREND_THRESHOLD", "22"))
+    )
     PLANITT_VOLUME_MULTIPLIER: float = float(os.getenv("PLANITT_VOLUME_MULTIPLIER", "1.2"))
     PLANITT_TOUCH_TOLERANCE_PCT: float = float(os.getenv("PLANITT_TOUCH_TOLERANCE_PCT", "0.015"))
     PLANITT_ALLOW_VOLATILE_THROUGH_GATES: bool = (
@@ -199,6 +344,18 @@ class Settings(BaseSettings):
     )
     PLANITT_RANGING_MIN_DI_SPREAD: float = float(os.getenv("PLANITT_RANGING_MIN_DI_SPREAD", "1.5"))
     PLANITT_RELAX_MOMENTUM: bool = os.getenv("PLANITT_RELAX_MOMENTUM", "true").lower() == "true"
+    PLANITT_CRYPTO_FUTURES_ANALYSIS: bool = (
+        os.getenv("PLANITT_CRYPTO_FUTURES_ANALYSIS", "true").lower() == "true"
+    )
+    PLANITT_CRYPTO_SWEEP_SETUP_ENABLED: bool = (
+        os.getenv("PLANITT_CRYPTO_SWEEP_SETUP_ENABLED", "true").lower() == "true"
+    )
+    PLANITT_CRYPTO_SWEEP_LOOKBACK_BARS: int = int(os.getenv("PLANITT_CRYPTO_SWEEP_LOOKBACK_BARS", "40"))
+    PLANITT_CRYPTO_VWAP_SETUP_ENABLED: bool = (
+        os.getenv("PLANITT_CRYPTO_VWAP_SETUP_ENABLED", "true").lower() == "true"
+    )
+    PLANITT_CRYPTO_VWAP_TOLERANCE_PCT: float = float(os.getenv("PLANITT_CRYPTO_VWAP_TOLERANCE_PCT", "0.0015"))
+    PLANITT_CRYPTO_DI_MOMENTUM_SPREAD: float = float(os.getenv("PLANITT_CRYPTO_DI_MOMENTUM_SPREAD", "2.0"))
     PLANITT_MIN_HITS_STRONG_ADX: int = int(os.getenv("PLANITT_MIN_HITS_STRONG_ADX", "2"))
     PLANITT_MTF_MIN_AGREEING: int = int(os.getenv("PLANITT_MTF_MIN_AGREEING", "2"))
     PLANITT_MTF_ALLOW_RANGING_HTF: bool = os.getenv("PLANITT_MTF_ALLOW_RANGING_HTF", "true").lower() == "true"
@@ -215,6 +372,9 @@ class Settings(BaseSettings):
     PLANITT_ALLOW_REVERSAL_SETUPS: bool = (
         os.getenv("PLANITT_ALLOW_REVERSAL_SETUPS", "false").lower() == "true"
     )
+    PLANITT_CHOPPINESS_MAX: float = float(os.getenv("PLANITT_CHOPPINESS_MAX", "48.0"))
+    PLANITT_VOLUME_LOOKBACK: int = int(os.getenv("PLANITT_VOLUME_LOOKBACK", "20"))
+    PLANITT_SWING_PIVOT_LOOKBACK: int = int(os.getenv("PLANITT_SWING_PIVOT_LOOKBACK", "80"))
     ENABLE_CANDLESTICK_PATTERNS: bool = os.getenv("ENABLE_CANDLESTICK_PATTERNS", "true").lower() == "true"
     PATTERN_MIN_STRENGTH: float = float(os.getenv("PATTERN_MIN_STRENGTH", "0.60"))
     PATTERN_AT_LEVEL_REQUIRED: bool = os.getenv("PATTERN_AT_LEVEL_REQUIRED", "true").lower() == "true"
@@ -241,6 +401,12 @@ class Settings(BaseSettings):
     SOP_HIGH_CONF_MIN_SOURCES: int = int(os.getenv("SOP_HIGH_CONF_MIN_SOURCES", "6"))
     SOP_LEVERAGED_SL_MIN: float = float(os.getenv("SOP_LEVERAGED_SL_MIN", "18.0"))
     SOP_LEVERAGED_SL_MAX: float = float(os.getenv("SOP_LEVERAGED_SL_MAX", "22.0"))
+
+    # Target calculation
+    TARGET_ENTRY_HALF_PCT: float = float(os.getenv("TARGET_ENTRY_HALF_PCT", "0.005"))
+    TARGET_ENTRY_MIN_WIDTH_PCT: float = float(os.getenv("TARGET_ENTRY_MIN_WIDTH_PCT", "0.5"))
+    TARGET_ENTRY_MAX_WIDTH_PCT: float = float(os.getenv("TARGET_ENTRY_MAX_WIDTH_PCT", "1.5"))
+    TARGET_ATR_ENTRY_MULT: float = float(os.getenv("TARGET_ATR_ENTRY_MULT", "0.04"))
 
     # Risk defaults
     RISK_PER_TRADE_PERCENT: float = 1.0
@@ -327,9 +493,19 @@ class Settings(BaseSettings):
         return Path(self.ADVISOR_OUTPUT_DIR)
 
 
+ROOT = Path(__file__).resolve().parent.parent
+
+
 @lru_cache()
 def get_settings() -> Settings:
     disable_dotenv = os.getenv("DISABLE_DOTENV", "false").lower() == "true"
+    if not disable_dotenv:
+        try:
+            from dotenv import load_dotenv
+
+            load_dotenv(ROOT / ".env", override=False)
+        except ImportError:
+            pass
     if disable_dotenv:
         return Settings(_env_file=None)
     return Settings()

@@ -1,8 +1,8 @@
 {
   "mode": "high_volume",
   "eval_period": {
-    "from": "2026-06-09T00:00:00+00:00",
-    "to": "2026-06-16T00:00:00+00:00",
+    "from": "2026-06-11T00:00:00+00:00",
+    "to": "2026-06-18T00:00:00+00:00",
     "days": 7
   },
   "config": {
@@ -22,207 +22,87 @@
   "summary": {
     "label": "7d_high_volume",
     "signals": 100,
-    "closed_tp_sl": 55,
-    "wins": 35,
-    "losses": 20,
-    "expired": 45,
-    "win_rate_pct": 63.64,
-    "net_r": 30.639,
-    "expectancy": 0.557,
-    "profit_factor": 2.532,
-    "net_return_pct": 100.19,
-    "compounded_return_pct": 159.02
+    "closed_tp_sl": 63,
+    "wins": 31,
+    "losses": 32,
+    "expired": 37,
+    "win_rate_pct": 49.21,
+    "net_r": 8.667,
+    "expectancy": 0.138,
+    "profit_factor": 1.271,
+    "net_return_pct": 28.34,
+    "compounded_return_pct": 26.65
   },
   "by_timeframe": {
     "15m": {
       "label": "15m",
-      "signals": 99,
-      "closed_tp_sl": 55,
-      "wins": 35,
-      "losses": 20,
-      "expired": 44,
-      "win_rate_pct": 63.64,
-      "net_r": 30.639,
-      "expectancy": 0.557,
-      "profit_factor": 2.532,
-      "net_return_pct": 100.19,
-      "compounded_return_pct": 159.02
+      "signals": 93,
+      "closed_tp_sl": 58,
+      "wins": 31,
+      "losses": 27,
+      "expired": 35,
+      "win_rate_pct": 53.45,
+      "net_r": 13.667,
+      "expectancy": 0.236,
+      "profit_factor": 1.506,
+      "net_return_pct": 44.69,
+      "compounded_return_pct": 49.56
     },
     "1h": {
       "label": "1h",
-      "signals": 1,
-      "closed_tp_sl": 0,
+      "signals": 7,
+      "closed_tp_sl": 5,
       "wins": 0,
-      "losses": 0,
-      "expired": 1,
+      "losses": 5,
+      "expired": 2,
       "win_rate_pct": 0.0,
-      "net_r": 0,
-      "expectancy": 0.0,
+      "net_r": -5.0,
+      "expectancy": -1.0,
       "profit_factor": 0.0,
-      "net_return_pct": 0.0,
-      "compounded_return_pct": 0.0
+      "net_return_pct": -16.35,
+      "compounded_return_pct": -15.32
     }
   },
   "by_direction": {
     "BUY": {
       "label": "BUY",
       "signals": 100,
-      "closed_tp_sl": 55,
-      "wins": 35,
-      "losses": 20,
-      "expired": 45,
-      "win_rate_pct": 63.64,
-      "net_r": 30.639,
-      "expectancy": 0.557,
-      "profit_factor": 2.532,
-      "net_return_pct": 100.19,
-      "compounded_return_pct": 159.02
+      "closed_tp_sl": 63,
+      "wins": 31,
+      "losses": 32,
+      "expired": 37,
+      "win_rate_pct": 49.21,
+      "net_r": 8.667,
+      "expectancy": 0.138,
+      "profit_factor": 1.271,
+      "net_return_pct": 28.34,
+      "compounded_return_pct": 26.65
     }
   },
   "top_reject_reasons": {
-    "regime_filtered": 7216,
-    "symbol_not_in_allowlist": 2031,
-    "direction_blocked": 1392,
-    "opposing_pattern": 1145,
-    "actual_rr_too_low": 763,
-    "vote_margin_too_low": 700,
-    "confluence_hits_too_low": 632,
-    "insufficient_votes": 430,
-    "tier_a_conf_below_0.85": 373,
-    "sell_against_trending_up": 338,
-    "reversal_setup_blocked": 289,
-    "tp_unreachable": 281,
-    "htf_misalignment": 190,
-    "adx_below_threshold": 134,
-    "negative_bucket": 114
+    "direction_blocked_SELL": 4246,
+    "symbol_not_in_allowlist": 3725,
+    "ema_misalignment": 2550,
+    "actual_rr_too_low": 1571,
+    "vote_margin_too_low": 1483,
+    "confluence_hits_too_low": 1260,
+    "opposing_pattern": 1038,
+    "reversal_setup_blocked": 399,
+    "negative_bucket": 271,
+    "tp_unreachable": 259,
+    "htf_misalignment": 201,
+    "adx_below_threshold": 131,
+    "insufficient_votes": 110,
+    "htf_ranging": 12,
+    "confidence": 7
   },
   "trades": [
-    {
-      "symbol": "XRP",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.911,
-      "composite_score": 1.111,
-      "at": "2026-06-09T04:45:00+00:00"
-    },
-    {
-      "symbol": "SOL",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.954,
-      "composite_score": 1.154,
-      "at": "2026-06-09T05:15:00+00:00"
-    },
-    {
-      "symbol": "INJ",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.97,
-      "composite_score": 1.145,
-      "at": "2026-06-09T07:15:00+00:00"
-    },
-    {
-      "symbol": "ATOM",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.922,
-      "composite_score": 1.122,
-      "at": "2026-06-09T07:45:00+00:00"
-    },
-    {
-      "symbol": "INJ",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.941,
-      "composite_score": 1.116,
-      "at": "2026-06-09T09:30:00+00:00"
-    },
-    {
-      "symbol": "TIA",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.951,
-      "composite_score": 1.151,
-      "at": "2026-06-09T13:15:00+00:00"
-    },
-    {
-      "symbol": "ATOM",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.959,
-      "composite_score": 1.159,
-      "at": "2026-06-09T13:45:00+00:00"
-    },
-    {
-      "symbol": "NEAR",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.97,
-      "composite_score": 1.145,
-      "at": "2026-06-09T21:15:00+00:00"
-    },
-    {
-      "symbol": "TIA",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.931,
-      "composite_score": 1.131,
-      "at": "2026-06-09T21:15:00+00:00"
-    },
-    {
-      "symbol": "ATOM",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.918,
-      "composite_score": 1.118,
-      "at": "2026-06-10T09:45:00+00:00"
-    },
-    {
-      "symbol": "TIA",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.937,
-      "composite_score": 1.112,
-      "at": "2026-06-10T13:45:00+00:00"
-    },
-    {
-      "symbol": "TIA",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.965,
-      "composite_score": 1.14,
-      "at": "2026-06-10T15:00:00+00:00"
-    },
     {
       "symbol": "ATOM",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.531,
+      "r_multiple": 1.31,
       "confidence": 0.956,
       "composite_score": 1.156,
       "at": "2026-06-11T01:45:00+00:00"
@@ -232,60 +112,10 @@
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.351,
-      "confidence": 0.91,
-      "composite_score": 1.11,
-      "at": "2026-06-11T02:00:00+00:00"
-    },
-    {
-      "symbol": "ATOM",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.424,
-      "confidence": 0.916,
-      "composite_score": 1.116,
-      "at": "2026-06-11T03:30:00+00:00"
-    },
-    {
-      "symbol": "ATOM",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.418,
+      "r_multiple": 1.203,
       "confidence": 0.97,
       "composite_score": 1.17,
       "at": "2026-06-11T04:00:00+00:00"
-    },
-    {
-      "symbol": "ATOM",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.38,
-      "confidence": 0.926,
-      "composite_score": 1.126,
-      "at": "2026-06-11T04:30:00+00:00"
-    },
-    {
-      "symbol": "ATOM",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.385,
-      "confidence": 0.929,
-      "composite_score": 1.129,
-      "at": "2026-06-11T06:45:00+00:00"
-    },
-    {
-      "symbol": "ATOM",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.324,
-      "confidence": 0.97,
-      "composite_score": 1.17,
-      "at": "2026-06-11T07:15:00+00:00"
     },
     {
       "symbol": "SUI",
@@ -303,19 +133,9 @@
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
-      "confidence": 0.944,
-      "composite_score": 1.144,
-      "at": "2026-06-11T12:00:00+00:00"
-    },
-    {
-      "symbol": "SUI",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.97,
-      "composite_score": 1.12,
-      "at": "2026-06-11T12:00:00+00:00"
+      "confidence": 0.934,
+      "composite_score": 1.134,
+      "at": "2026-06-11T12:15:00+00:00"
     },
     {
       "symbol": "SOL",
@@ -332,19 +152,9 @@
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.417,
+      "r_multiple": 1.158,
       "confidence": 0.94,
       "composite_score": 1.14,
-      "at": "2026-06-11T12:45:00+00:00"
-    },
-    {
-      "symbol": "SUI",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.968,
-      "composite_score": 1.118,
       "at": "2026-06-11T12:45:00+00:00"
     },
     {
@@ -352,20 +162,10 @@
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.338,
+      "r_multiple": 1.088,
       "confidence": 0.933,
       "composite_score": 1.133,
       "at": "2026-06-11T13:45:00+00:00"
-    },
-    {
-      "symbol": "SEI",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.927,
-      "composite_score": 1.127,
-      "at": "2026-06-11T15:15:00+00:00"
     },
     {
       "symbol": "ATOM",
@@ -379,20 +179,10 @@
     },
     {
       "symbol": "ATOM",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.912,
-      "composite_score": 1.112,
-      "at": "2026-06-11T17:45:00+00:00"
-    },
-    {
-      "symbol": "ATOM",
       "timeframe": "1h",
       "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
       "confidence": 0.964,
       "composite_score": 1.164,
       "at": "2026-06-11T18:00:00+00:00"
@@ -408,63 +198,33 @@
       "at": "2026-06-11T18:00:00+00:00"
     },
     {
-      "symbol": "LINK",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.944,
-      "composite_score": 1.144,
-      "at": "2026-06-11T18:00:00+00:00"
-    },
-    {
-      "symbol": "AVAX",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.91,
-      "composite_score": 1.11,
-      "at": "2026-06-11T19:30:00+00:00"
-    },
-    {
-      "symbol": "AVAX",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.947,
-      "composite_score": 1.147,
-      "at": "2026-06-11T19:45:00+00:00"
-    },
-    {
-      "symbol": "LINK",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.91,
-      "composite_score": 1.11,
-      "at": "2026-06-11T20:15:00+00:00"
-    },
-    {
-      "symbol": "SEI",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.364,
-      "confidence": 0.92,
-      "composite_score": 1.12,
-      "at": "2026-06-11T23:45:00+00:00"
-    },
-    {
       "symbol": "ARB",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
-      "confidence": 0.91,
-      "composite_score": 1.11,
+      "confidence": 0.935,
+      "composite_score": 1.135,
+      "at": "2026-06-11T18:15:00+00:00"
+    },
+    {
+      "symbol": "LINK",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "expired",
+      "r_multiple": 0.0,
+      "confidence": 0.97,
+      "composite_score": 1.145,
+      "at": "2026-06-12T03:15:00+00:00"
+    },
+    {
+      "symbol": "TIA",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.34,
+      "confidence": 0.963,
+      "composite_score": 1.138,
       "at": "2026-06-12T03:15:00+00:00"
     },
     {
@@ -478,53 +238,33 @@
       "at": "2026-06-12T03:30:00+00:00"
     },
     {
-      "symbol": "OP",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.262,
-      "confidence": 0.926,
-      "composite_score": 1.126,
-      "at": "2026-06-12T03:30:00+00:00"
-    },
-    {
-      "symbol": "ARB",
+      "symbol": "AVAX",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
-      "confidence": 0.91,
-      "composite_score": 1.11,
+      "confidence": 0.953,
+      "composite_score": 1.153,
       "at": "2026-06-12T04:30:00+00:00"
     },
     {
-      "symbol": "BCH",
+      "symbol": "XRP",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
-      "confidence": 0.927,
-      "composite_score": 1.127,
-      "at": "2026-06-12T05:00:00+00:00"
+      "confidence": 0.963,
+      "composite_score": 1.138,
+      "at": "2026-06-12T04:30:00+00:00"
     },
     {
-      "symbol": "ATOM",
+      "symbol": "SOL",
       "timeframe": "15m",
       "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.91,
-      "composite_score": 1.11,
-      "at": "2026-06-12T05:15:00+00:00"
-    },
-    {
-      "symbol": "ATOM",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.91,
-      "composite_score": 1.11,
+      "outcome": "expired",
+      "r_multiple": 0.0,
+      "confidence": 0.94,
+      "composite_score": 1.14,
       "at": "2026-06-12T05:30:00+00:00"
     },
     {
@@ -538,34 +278,24 @@
       "at": "2026-06-12T08:30:00+00:00"
     },
     {
-      "symbol": "ARB",
+      "symbol": "SOL",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
-      "confidence": 0.921,
-      "composite_score": 1.121,
+      "confidence": 0.94,
+      "composite_score": 1.14,
       "at": "2026-06-12T08:30:00+00:00"
     },
     {
-      "symbol": "SUI",
+      "symbol": "SOL",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
-      "confidence": 0.931,
-      "composite_score": 1.131,
-      "at": "2026-06-12T08:45:00+00:00"
-    },
-    {
-      "symbol": "ARB",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.927,
-      "composite_score": 1.127,
-      "at": "2026-06-12T09:00:00+00:00"
+      "confidence": 0.97,
+      "composite_score": 1.17,
+      "at": "2026-06-12T09:30:00+00:00"
     },
     {
       "symbol": "SUI",
@@ -598,33 +328,13 @@
       "at": "2026-06-12T09:45:00+00:00"
     },
     {
-      "symbol": "BCH",
+      "symbol": "SOL",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
-      "confidence": 0.91,
-      "composite_score": 1.11,
-      "at": "2026-06-12T10:00:00+00:00"
-    },
-    {
-      "symbol": "BCH",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.91,
-      "composite_score": 1.11,
-      "at": "2026-06-12T10:15:00+00:00"
-    },
-    {
-      "symbol": "BCH",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.91,
-      "composite_score": 1.11,
+      "confidence": 0.94,
+      "composite_score": 1.14,
       "at": "2026-06-12T10:30:00+00:00"
     },
     {
@@ -633,9 +343,9 @@
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
-      "confidence": 0.917,
-      "composite_score": 1.117,
-      "at": "2026-06-12T10:45:00+00:00"
+      "confidence": 0.95,
+      "composite_score": 1.15,
+      "at": "2026-06-12T11:15:00+00:00"
     },
     {
       "symbol": "SEI",
@@ -668,94 +378,54 @@
       "at": "2026-06-12T15:45:00+00:00"
     },
     {
-      "symbol": "ATOM",
+      "symbol": "SEI",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.127,
+      "confidence": 0.955,
+      "composite_score": 1.155,
+      "at": "2026-06-12T20:30:00+00:00"
+    },
+    {
+      "symbol": "SEI",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.5,
+      "confidence": 0.963,
+      "composite_score": 1.163,
+      "at": "2026-06-12T23:45:00+00:00"
+    },
+    {
+      "symbol": "ARB",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "expired",
+      "r_multiple": 0.0,
+      "confidence": 0.939,
+      "composite_score": 1.139,
+      "at": "2026-06-13T00:15:00+00:00"
+    },
+    {
+      "symbol": "ARB",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
       "confidence": 0.95,
       "composite_score": 1.15,
-      "at": "2026-06-13T02:00:00+00:00"
-    },
-    {
-      "symbol": "SEI",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.947,
-      "confidence": 0.929,
-      "composite_score": 1.129,
-      "at": "2026-06-13T02:45:00+00:00"
-    },
-    {
-      "symbol": "ATOM",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.914,
-      "composite_score": 1.114,
-      "at": "2026-06-13T03:15:00+00:00"
+      "at": "2026-06-13T01:15:00+00:00"
     },
     {
       "symbol": "OP",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.284,
-      "confidence": 0.949,
-      "composite_score": 1.149,
-      "at": "2026-06-13T06:45:00+00:00"
-    },
-    {
-      "symbol": "SEI",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.93,
-      "composite_score": 1.13,
-      "at": "2026-06-13T07:30:00+00:00"
-    },
-    {
-      "symbol": "SUI",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.953,
-      "composite_score": 1.128,
-      "at": "2026-06-13T07:30:00+00:00"
-    },
-    {
-      "symbol": "SUI",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.943,
-      "composite_score": 1.118,
-      "at": "2026-06-13T07:45:00+00:00"
-    },
-    {
-      "symbol": "SUI",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.935,
-      "composite_score": 1.11,
-      "at": "2026-06-13T08:45:00+00:00"
-    },
-    {
-      "symbol": "SUI",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.955,
-      "composite_score": 1.13,
-      "at": "2026-06-13T11:15:00+00:00"
+      "r_multiple": 1.242,
+      "confidence": 0.97,
+      "composite_score": 1.145,
+      "at": "2026-06-13T01:15:00+00:00"
     },
     {
       "symbol": "ARB",
@@ -763,86 +433,66 @@
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
-      "confidence": 0.91,
-      "composite_score": 1.11,
-      "at": "2026-06-13T11:30:00+00:00"
+      "confidence": 0.955,
+      "composite_score": 1.155,
+      "at": "2026-06-13T01:45:00+00:00"
+    },
+    {
+      "symbol": "OP",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.132,
+      "confidence": 0.96,
+      "composite_score": 1.135,
+      "at": "2026-06-13T02:00:00+00:00"
     },
     {
       "symbol": "TIA",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.216,
-      "confidence": 0.945,
-      "composite_score": 1.145,
-      "at": "2026-06-13T12:15:00+00:00"
+      "r_multiple": 1.179,
+      "confidence": 0.963,
+      "composite_score": 1.138,
+      "at": "2026-06-13T06:00:00+00:00"
     },
     {
-      "symbol": "ARB",
+      "symbol": "OP",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.244,
+      "confidence": 0.952,
+      "composite_score": 1.152,
+      "at": "2026-06-13T06:30:00+00:00"
+    },
+    {
+      "symbol": "OP",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.158,
+      "confidence": 0.949,
+      "composite_score": 1.149,
+      "at": "2026-06-13T06:45:00+00:00"
+    },
+    {
+      "symbol": "AVAX",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
-      "confidence": 0.91,
-      "composite_score": 1.11,
-      "at": "2026-06-13T12:15:00+00:00"
+      "confidence": 0.938,
+      "composite_score": 1.138,
+      "at": "2026-06-13T07:00:00+00:00"
     },
     {
-      "symbol": "ARB",
+      "symbol": "BCH",
       "timeframe": "15m",
       "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.913,
-      "composite_score": 1.113,
-      "at": "2026-06-13T12:45:00+00:00"
-    },
-    {
-      "symbol": "ARB",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.953,
-      "composite_score": 1.153,
-      "at": "2026-06-13T13:00:00+00:00"
-    },
-    {
-      "symbol": "ARB",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "sl_hit",
-      "r_multiple": -1.0,
-      "confidence": 0.934,
-      "composite_score": 1.134,
-      "at": "2026-06-13T13:15:00+00:00"
-    },
-    {
-      "symbol": "NEAR",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.245,
-      "confidence": 0.947,
-      "composite_score": 1.122,
-      "at": "2026-06-13T13:30:00+00:00"
-    },
-    {
-      "symbol": "NEAR",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.173,
-      "confidence": 0.97,
-      "composite_score": 1.145,
-      "at": "2026-06-13T14:00:00+00:00"
-    },
-    {
-      "symbol": "NEAR",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.27,
+      "outcome": "expired",
+      "r_multiple": 0.0,
       "confidence": 0.97,
       "composite_score": 1.145,
       "at": "2026-06-13T14:15:00+00:00"
@@ -858,13 +508,13 @@
       "at": "2026-06-13T14:15:00+00:00"
     },
     {
-      "symbol": "INJ",
+      "symbol": "SEI",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "sl_hit",
       "r_multiple": -1.0,
-      "confidence": 0.97,
-      "composite_score": 1.12,
+      "confidence": 0.958,
+      "composite_score": 1.158,
       "at": "2026-06-13T15:00:00+00:00"
     },
     {
@@ -888,93 +538,83 @@
       "at": "2026-06-13T15:30:00+00:00"
     },
     {
-      "symbol": "NEAR",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "expired",
-      "r_multiple": 0.0,
-      "confidence": 0.956,
-      "composite_score": 1.131,
-      "at": "2026-06-13T16:00:00+00:00"
-    },
-    {
       "symbol": "SUI",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "expired",
       "r_multiple": 0.0,
-      "confidence": 0.949,
-      "composite_score": 1.124,
-      "at": "2026-06-13T18:00:00+00:00"
+      "confidence": 0.97,
+      "composite_score": 1.145,
+      "at": "2026-06-13T16:00:00+00:00"
+    },
+    {
+      "symbol": "SEI",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.953,
+      "composite_score": 1.153,
+      "at": "2026-06-13T16:45:00+00:00"
+    },
+    {
+      "symbol": "SOL",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.94,
+      "composite_score": 1.14,
+      "at": "2026-06-14T01:30:00+00:00"
     },
     {
       "symbol": "TIA",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.484,
+      "r_multiple": 1.218,
       "confidence": 0.938,
       "composite_score": 1.138,
       "at": "2026-06-14T19:30:00+00:00"
     },
     {
-      "symbol": "TIA",
+      "symbol": "XRP",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.384,
-      "confidence": 0.91,
-      "composite_score": 1.11,
-      "at": "2026-06-14T21:00:00+00:00"
+      "r_multiple": 1.236,
+      "confidence": 0.951,
+      "composite_score": 1.151,
+      "at": "2026-06-14T21:45:00+00:00"
     },
     {
-      "symbol": "SOL",
-      "timeframe": "15m",
+      "symbol": "SEI",
+      "timeframe": "1h",
       "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.153,
-      "confidence": 0.956,
-      "composite_score": 1.156,
-      "at": "2026-06-14T21:45:00+00:00"
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.957,
+      "composite_score": 1.157,
+      "at": "2026-06-14T22:00:00+00:00"
     },
     {
       "symbol": "SUI",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.386,
+      "r_multiple": 1.259,
       "confidence": 0.944,
       "composite_score": 1.144,
       "at": "2026-06-14T22:00:00+00:00"
     },
     {
-      "symbol": "NEAR",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.234,
-      "confidence": 0.942,
-      "composite_score": 1.117,
-      "at": "2026-06-14T22:30:00+00:00"
-    },
-    {
       "symbol": "SOL",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.968,
+      "r_multiple": 1.65,
       "confidence": 0.947,
       "composite_score": 1.147,
-      "at": "2026-06-14T22:45:00+00:00"
-    },
-    {
-      "symbol": "NEAR",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 2.431,
-      "confidence": 0.943,
-      "composite_score": 1.118,
       "at": "2026-06-14T22:45:00+00:00"
     },
     {
@@ -982,7 +622,7 @@
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.566,
+      "r_multiple": 1.291,
       "confidence": 0.963,
       "composite_score": 1.163,
       "at": "2026-06-14T23:30:00+00:00"
@@ -992,19 +632,9 @@
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.848,
+      "r_multiple": 1.543,
       "confidence": 0.938,
       "composite_score": 1.138,
-      "at": "2026-06-14T23:30:00+00:00"
-    },
-    {
-      "symbol": "XRP",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.597,
-      "confidence": 0.925,
-      "composite_score": 1.125,
       "at": "2026-06-14T23:30:00+00:00"
     },
     {
@@ -1018,53 +648,13 @@
       "at": "2026-06-15T00:00:00+00:00"
     },
     {
-      "symbol": "LINK",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.205,
-      "confidence": 0.924,
-      "composite_score": 1.124,
-      "at": "2026-06-15T00:00:00+00:00"
-    },
-    {
       "symbol": "SOL",
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.396,
+      "r_multiple": 1.14,
       "confidence": 0.951,
       "composite_score": 1.151,
-      "at": "2026-06-15T00:15:00+00:00"
-    },
-    {
-      "symbol": "NEAR",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.851,
-      "confidence": 0.924,
-      "composite_score": 1.124,
-      "at": "2026-06-15T00:15:00+00:00"
-    },
-    {
-      "symbol": "BCH",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.423,
-      "confidence": 0.946,
-      "composite_score": 1.121,
-      "at": "2026-06-15T00:15:00+00:00"
-    },
-    {
-      "symbol": "LINK",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.657,
-      "confidence": 0.912,
-      "composite_score": 1.112,
       "at": "2026-06-15T00:15:00+00:00"
     },
     {
@@ -1072,19 +662,9 @@
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.334,
+      "r_multiple": 1.084,
       "confidence": 0.97,
       "composite_score": 1.17,
-      "at": "2026-06-15T06:30:00+00:00"
-    },
-    {
-      "symbol": "SOL",
-      "timeframe": "15m",
-      "side": "BUY",
-      "outcome": "tp_hit",
-      "r_multiple": 1.156,
-      "confidence": 0.916,
-      "composite_score": 1.116,
       "at": "2026-06-15T06:30:00+00:00"
     },
     {
@@ -1092,10 +672,430 @@
       "timeframe": "15m",
       "side": "BUY",
       "outcome": "tp_hit",
-      "r_multiple": 1.236,
-      "confidence": 0.91,
-      "composite_score": 1.11,
-      "at": "2026-06-15T06:30:00+00:00"
+      "r_multiple": 1.1,
+      "confidence": 0.956,
+      "composite_score": 1.156,
+      "at": "2026-06-15T08:15:00+00:00"
+    },
+    {
+      "symbol": "LINK",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.104,
+      "confidence": 0.965,
+      "composite_score": 1.165,
+      "at": "2026-06-15T08:45:00+00:00"
+    },
+    {
+      "symbol": "SOL",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.11,
+      "confidence": 0.954,
+      "composite_score": 1.154,
+      "at": "2026-06-15T08:45:00+00:00"
+    },
+    {
+      "symbol": "OP",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.97,
+      "composite_score": 1.17,
+      "at": "2026-06-15T11:00:00+00:00"
+    },
+    {
+      "symbol": "OP",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.954,
+      "composite_score": 1.154,
+      "at": "2026-06-15T11:30:00+00:00"
+    },
+    {
+      "symbol": "SOL",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.196,
+      "confidence": 0.951,
+      "composite_score": 1.151,
+      "at": "2026-06-15T11:30:00+00:00"
+    },
+    {
+      "symbol": "SUI",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.95,
+      "composite_score": 1.15,
+      "at": "2026-06-15T11:30:00+00:00"
+    },
+    {
+      "symbol": "LINK",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "expired",
+      "r_multiple": 0.0,
+      "confidence": 0.94,
+      "composite_score": 1.14,
+      "at": "2026-06-15T11:30:00+00:00"
+    },
+    {
+      "symbol": "OP",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.946,
+      "composite_score": 1.146,
+      "at": "2026-06-15T11:45:00+00:00"
+    },
+    {
+      "symbol": "XRP",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "expired",
+      "r_multiple": 0.0,
+      "confidence": 0.956,
+      "composite_score": 1.156,
+      "at": "2026-06-15T12:00:00+00:00"
+    },
+    {
+      "symbol": "BCH",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.942,
+      "composite_score": 1.142,
+      "at": "2026-06-15T12:00:00+00:00"
+    },
+    {
+      "symbol": "NEAR",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.935,
+      "composite_score": 1.135,
+      "at": "2026-06-15T12:00:00+00:00"
+    },
+    {
+      "symbol": "XRP",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.484,
+      "confidence": 0.954,
+      "composite_score": 1.154,
+      "at": "2026-06-15T12:45:00+00:00"
+    },
+    {
+      "symbol": "TIA",
+      "timeframe": "1h",
+      "side": "BUY",
+      "outcome": "expired",
+      "r_multiple": 0.0,
+      "confidence": 0.954,
+      "composite_score": 1.154,
+      "at": "2026-06-15T13:00:00+00:00"
+    },
+    {
+      "symbol": "LINK",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.952,
+      "composite_score": 1.152,
+      "at": "2026-06-15T13:30:00+00:00"
+    },
+    {
+      "symbol": "SUI",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.952,
+      "composite_score": 1.152,
+      "at": "2026-06-15T13:30:00+00:00"
+    },
+    {
+      "symbol": "SOL",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "expired",
+      "r_multiple": 0.0,
+      "confidence": 0.948,
+      "composite_score": 1.148,
+      "at": "2026-06-15T13:30:00+00:00"
+    },
+    {
+      "symbol": "LINK",
+      "timeframe": "1h",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.963,
+      "composite_score": 1.163,
+      "at": "2026-06-15T14:00:00+00:00"
+    },
+    {
+      "symbol": "TIA",
+      "timeframe": "1h",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.957,
+      "composite_score": 1.157,
+      "at": "2026-06-15T14:00:00+00:00"
+    },
+    {
+      "symbol": "INJ",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.954,
+      "composite_score": 1.154,
+      "at": "2026-06-15T14:45:00+00:00"
+    },
+    {
+      "symbol": "LINK",
+      "timeframe": "1h",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.97,
+      "composite_score": 1.17,
+      "at": "2026-06-15T16:00:00+00:00"
+    },
+    {
+      "symbol": "ATOM",
+      "timeframe": "1h",
+      "side": "BUY",
+      "outcome": "expired",
+      "r_multiple": 0.0,
+      "confidence": 0.969,
+      "composite_score": 1.169,
+      "at": "2026-06-15T16:00:00+00:00"
+    },
+    {
+      "symbol": "INJ",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 3.115,
+      "confidence": 0.95,
+      "composite_score": 1.15,
+      "at": "2026-06-16T04:00:00+00:00"
+    },
+    {
+      "symbol": "INJ",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.493,
+      "confidence": 0.955,
+      "composite_score": 1.155,
+      "at": "2026-06-16T04:30:00+00:00"
+    },
+    {
+      "symbol": "SUI",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.934,
+      "composite_score": 1.134,
+      "at": "2026-06-16T09:00:00+00:00"
+    },
+    {
+      "symbol": "SUI",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.938,
+      "composite_score": 1.138,
+      "at": "2026-06-16T10:30:00+00:00"
+    },
+    {
+      "symbol": "ARB",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.942,
+      "composite_score": 1.142,
+      "at": "2026-06-16T11:45:00+00:00"
+    },
+    {
+      "symbol": "LINK",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.958,
+      "composite_score": 1.158,
+      "at": "2026-06-16T12:45:00+00:00"
+    },
+    {
+      "symbol": "XRP",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.958,
+      "composite_score": 1.158,
+      "at": "2026-06-16T12:45:00+00:00"
+    },
+    {
+      "symbol": "TIA",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.163,
+      "confidence": 0.935,
+      "composite_score": 1.135,
+      "at": "2026-06-16T12:45:00+00:00"
+    },
+    {
+      "symbol": "ATOM",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "expired",
+      "r_multiple": 0.0,
+      "confidence": 0.953,
+      "composite_score": 1.153,
+      "at": "2026-06-16T13:45:00+00:00"
+    },
+    {
+      "symbol": "ARB",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.213,
+      "confidence": 0.961,
+      "composite_score": 1.161,
+      "at": "2026-06-16T20:45:00+00:00"
+    },
+    {
+      "symbol": "ATOM",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "expired",
+      "r_multiple": 0.0,
+      "confidence": 0.963,
+      "composite_score": 1.163,
+      "at": "2026-06-16T21:00:00+00:00"
+    },
+    {
+      "symbol": "LINK",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.97,
+      "composite_score": 1.17,
+      "at": "2026-06-16T21:15:00+00:00"
+    },
+    {
+      "symbol": "BCH",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.949,
+      "composite_score": 1.149,
+      "at": "2026-06-16T22:15:00+00:00"
+    },
+    {
+      "symbol": "ARB",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.31,
+      "confidence": 0.97,
+      "composite_score": 1.17,
+      "at": "2026-06-17T00:15:00+00:00"
+    },
+    {
+      "symbol": "LINK",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "expired",
+      "r_multiple": 0.0,
+      "confidence": 0.962,
+      "composite_score": 1.162,
+      "at": "2026-06-17T01:15:00+00:00"
+    },
+    {
+      "symbol": "ARB",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "tp_hit",
+      "r_multiple": 1.277,
+      "confidence": 0.951,
+      "composite_score": 1.151,
+      "at": "2026-06-17T01:15:00+00:00"
+    },
+    {
+      "symbol": "LINK",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.961,
+      "composite_score": 1.161,
+      "at": "2026-06-17T01:45:00+00:00"
+    },
+    {
+      "symbol": "ARB",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.952,
+      "composite_score": 1.152,
+      "at": "2026-06-17T02:30:00+00:00"
+    },
+    {
+      "symbol": "SUI",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.943,
+      "composite_score": 1.143,
+      "at": "2026-06-17T02:30:00+00:00"
+    },
+    {
+      "symbol": "LINK",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.954,
+      "composite_score": 1.154,
+      "at": "2026-06-17T03:00:00+00:00"
+    },
+    {
+      "symbol": "TIA",
+      "timeframe": "15m",
+      "side": "BUY",
+      "outcome": "sl_hit",
+      "r_multiple": -1.0,
+      "confidence": 0.948,
+      "composite_score": 1.148,
+      "at": "2026-06-17T05:00:00+00:00"
     }
   ]
 }

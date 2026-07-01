@@ -34,21 +34,50 @@ def live_bucket_key(symbol: str, timeframe: str, direction: str | None = None) -
     return f"{sym}_{tf}"
 
 
+def _live_bucket_entry(
+    symbol: str,
+    timeframe: str,
+    *,
+    direction: str | None = None,
+) -> dict[str, Any] | None:
+    buckets = load_live_bucket_expectancy()
+    if direction:
+        entry = buckets.get(live_bucket_key(symbol, timeframe, direction))
+        if entry is not None:
+            return entry
+    return buckets.get(live_bucket_key(symbol, timeframe))
+
+
 def get_live_bucket_expectancy(
     symbol: str,
     timeframe: str,
     *,
     direction: str | None = None,
 ) -> float | None:
-    buckets = load_live_bucket_expectancy()
-    if direction:
-        entry = buckets.get(live_bucket_key(symbol, timeframe, direction))
-        if entry is not None:
-            return float(entry.get("expectancy", 0))
-    entry = buckets.get(live_bucket_key(symbol, timeframe))
+    entry = _live_bucket_entry(symbol, timeframe, direction=direction)
     if entry is None:
         return None
     return float(entry.get("expectancy", 0))
+
+
+def get_live_bucket_win_rate(
+    symbol: str,
+    timeframe: str,
+    *,
+    direction: str | None = None,
+) -> float | None:
+    """Return live win rate as 0.0–1.0 when bucket has resolved trades."""
+    entry = _live_bucket_entry(symbol, timeframe, direction=direction)
+    if entry is None:
+        return None
+    wins = int(entry.get("wins", 0))
+    losses = int(entry.get("losses", 0))
+    resolved = wins + losses
+    if resolved <= 0:
+        return None
+    if "win_rate_pct" in entry:
+        return float(entry["win_rate_pct"]) / 100.0
+    return wins / resolved
 
 
 def passes_live_bucket(
@@ -58,19 +87,23 @@ def passes_live_bucket(
     direction: str | None = None,
     min_expectancy: float = 0.0,
     min_trades: int = 2,
+    min_win_rate: float = 0.0,
 ) -> tuple[bool, str | None]:
-    """Reject when live history shows negative expectancy with enough samples."""
-    buckets = load_live_bucket_expectancy()
-    key = live_bucket_key(symbol, timeframe, direction) if direction else live_bucket_key(symbol, timeframe)
-    entry = buckets.get(key)
+    """Reject when live history shows weak expectancy or win rate with enough samples."""
+    entry = _live_bucket_entry(symbol, timeframe, direction=direction)
     if not entry:
         return True, None
+    key = live_bucket_key(symbol, timeframe, direction) if direction else live_bucket_key(symbol, timeframe)
     trades = int(entry.get("trades", 0))
     if trades < min_trades:
         return True, None
     exp = float(entry.get("expectancy", 0))
     if exp < min_expectancy:
         return False, f"live_bucket_{key}_{exp:.3f}"
+    if min_win_rate > 0:
+        wr = get_live_bucket_win_rate(symbol, timeframe, direction=direction)
+        if wr is not None and wr < min_win_rate:
+            return False, f"live_bucket_wr_{key}_{wr:.2f}"
     return True, None
 
 

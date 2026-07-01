@@ -67,6 +67,41 @@ CRYPTO_PAIRS = {
 
 MAJOR_SYMBOLS = frozenset({"BTC", "ETH", "SOL"})
 
+# CoinDCX futures symbols in approximate top-50–100 market-cap range (Jun 2026).
+# Used as the default advisor scan universe — excludes sub-top-100 / thin names.
+TOP_MCAP_SYMBOLS = frozenset(
+    {
+        "BTC",
+        "ETH",
+        "SOL",
+        "BNB",
+        "XRP",
+        "ADA",
+        "AVAX",
+        "DOGE",
+        "LINK",
+        "DOT",
+        "POL",
+        "LTC",
+        "BCH",
+        "ATOM",
+        "NEAR",
+        "UNI",
+        "APT",
+        "ARB",
+        "OP",
+        "INJ",
+        "SUI",
+        "TIA",
+        "SEI",
+        "FIL",
+        "AAVE",
+    }
+)
+
+# Below top ~100 on CoinDCX — never publish (SOP: avoid low-cap calls).
+LOW_CAP_SYMBOLS = frozenset({"RUNE"})
+
 # Technical Indicator Parameters
 INDICATOR_PARAMS = {
     "RSI": {"period": 14, "overbought": 70, "oversold": 30},

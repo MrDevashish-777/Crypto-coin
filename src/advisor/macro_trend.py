@@ -45,6 +45,27 @@ def btc_macro_bearish(
     return True, None
 
 
+def btc_macro_bullish_strict(
+    btc_htf: dict[str, CandleList],
+    ts_ms: int,
+) -> tuple[bool, str | None]:
+    """Swing BUY on alts: BTC 4h and 1d must both read bullish."""
+    if not btc_htf:
+        return False, "btc_macro_data_missing"
+
+    for tf in ("4h", "1d"):
+        series = btc_htf.get(tf)
+        if series is None:
+            return False, f"btc_macro_missing_{tf}"
+        side = _side_at_timestamp(series, ts_ms)
+        if side is None:
+            return False, f"btc_macro_missing_{tf}"
+        if side != "BUY":
+            return False, f"btc_macro_not_bull_{tf}"
+
+    return True, None
+
+
 def btc_macro_bullish(
     btc_htf: dict[str, CandleList],
     ts_ms: int,
@@ -68,6 +89,35 @@ def btc_macro_bullish(
             return False, f"btc_macro_not_bull_{tf}"
 
     return True, None
+
+
+def macro_alignment_score(
+    side: Direction,
+    btc_htf: dict,
+    ts_ms: int,
+) -> float:
+    """
+    Soft BTC macro score in [-1, +1] for the signal direction.
+    +1 = strongly aligned with BTC 4h/1d; -1 = counter-macro.
+    """
+    from src.data.models import CandleList
+
+    if not btc_htf:
+        return 0.0
+
+    votes: list[float] = []
+    for tf in ("4h", "1d"):
+        series = btc_htf.get(tf)
+        if series is None or not isinstance(series, CandleList):
+            continue
+        s = _side_at_timestamp(series, ts_ms)
+        if s is None:
+            continue
+        votes.append(1.0 if s == "BUY" else -1.0)
+    if not votes:
+        return 0.0
+    raw = sum(votes) / len(votes)
+    return raw if side == "BUY" else -raw
 
 
 def validate_direction_for_timeframe(
@@ -103,7 +153,10 @@ def validate_macro_for_signal(
 
     if side != "SELL" or symbol == "BTC":
         if side == "BUY" and symbol != "BTC":
-            return btc_macro_bullish(btc_htf or {}, signal_ts_ms)
+            if timeframe in ("4h", "1d") and settings.ADVISOR_REQUIRE_BTC_BULL_FOR_SWING_BUY:
+                return btc_macro_bullish_strict(btc_htf or {}, signal_ts_ms)
+            if settings.ADVISOR_REQUIRE_BTC_BULL_FOR_BUY:
+                return btc_macro_bullish(btc_htf or {}, signal_ts_ms)
         return True, None
 
     if not btc_htf:

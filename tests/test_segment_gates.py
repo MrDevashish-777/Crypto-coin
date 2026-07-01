@@ -52,6 +52,21 @@ def test_sell_stricter_than_buy_thresholds():
     assert sell.require_swing_reachability is True
 
 
+def test_4h_profile_stricter_than_1h():
+    h1 = get_publish_thresholds("BUY", "1h")
+    h4 = get_publish_thresholds("SELL", "4h")
+    assert h4.min_confidence > h1.min_confidence
+    assert h4.min_confluence_hits >= h1.min_confluence_hits
+
+
+def test_swing_sell_blocks_ranging():
+    ok, reason = validate_sell_regime(
+        "SELL", adx=28.0, regime=MarketRegime.RANGING, timeframe="4h"
+    )
+    assert ok is False
+    assert reason == "swing_sell_ranging_blocked"
+
+
 def test_sell_rejects_trending_up():
     ok, reason = validate_sell_regime("SELL", adx=28.0, regime=MarketRegime.TRENDING_UP)
     assert ok is False

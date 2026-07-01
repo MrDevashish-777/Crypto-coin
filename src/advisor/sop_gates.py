@@ -33,10 +33,12 @@ def validate_levels(
     leverage: float,
     risk_reward: str,
     confidence: float,
+    min_confidence: float | None = None,
 ) -> SOPValidationResult:
     """Hard reject if any SOP trading parameter is violated."""
-    if confidence < settings.ADVISOR_MIN_CONFIDENCE:
-        return SOPValidationResult(False, f"confidence_below_{settings.ADVISOR_MIN_CONFIDENCE}")
+    min_conf = min_confidence if min_confidence is not None else settings.ADVISOR_MIN_CONFIDENCE
+    if confidence < min_conf:
+        return SOPValidationResult(False, f"confidence_below_{min_conf}")
 
     low, high = sorted([entry_low, entry_high])
     entry_mid = (low + high) / 2.0
@@ -49,6 +51,9 @@ def validate_levels(
 
     if sl_pct < settings.SOP_MIN_SL_PCT - 0.01 or tp_pct < settings.SOP_MIN_SL_PCT - 0.01:
         return SOPValidationResult(False, f"tp_sl_pct_too_tight:sl={sl_pct} tp={tp_pct}")
+
+    if tp_pct < SOP_MIN_TP_SL_PCT - 0.01:
+        return SOPValidationResult(False, f"tp_pct_below_{SOP_MIN_TP_SL_PCT}")
 
     if sl_pct > settings.SOP_MAX_SL_PCT + 0.15:
         return SOPValidationResult(False, f"sl_pct_above_sop_max:{sl_pct}")
@@ -74,10 +79,10 @@ def validate_levels(
         return SOPValidationResult(False, "actual_rr_too_low")
 
     if direction == "BUY":
-        if not (stop_loss < low and target > high):
+        if not (stop_loss < entry_mid and target > entry_mid):
             return SOPValidationResult(False, "buy_level_order")
     else:
-        if not (stop_loss > high and target < low):
+        if not (stop_loss > entry_mid and target < entry_mid):
             return SOPValidationResult(False, "sell_level_order")
 
     if leverage < 2.0:

@@ -80,11 +80,14 @@ def _first_idx_at_or_after(candles, ts_ms: int) -> int | None:
 
 async def main() -> int:
     high_volume = "--high-volume" in sys.argv or "-H" in sys.argv
-    args = [a for a in sys.argv[1:] if a not in ("--high-volume", "-H")]
+    high_accuracy = "--high-accuracy" in sys.argv or "-A" in sys.argv
+    args = [a for a in sys.argv[1:] if a not in ("--high-volume", "-H", "--high-accuracy", "-A")]
     eval_days = int(args[0]) if args else 7
 
     if high_volume:
         _load_env_file(ROOT / "config" / "high_volume_backtest.env")
+    elif high_accuracy:
+        _load_env_file(ROOT / "config" / "high_accuracy.env")
 
     from config.settings import get_settings
 
@@ -121,7 +124,7 @@ async def main() -> int:
         if cl.candles:
             btc_htf[h] = cl
 
-    mode = "high_volume" if high_volume else "production_parity"
+    mode = "high_volume" if high_volume else ("high_accuracy" if high_accuracy else "production_parity")
     print(f"Mode:            {mode}")
     print(f"Backtest window: {eval_start.date()} → {end_at.date()} ({eval_days} days)")
     print(f"Data load:       {data_start.date()} → {end_at.date()} (warmup {warmup_days}d)")

@@ -70,8 +70,14 @@ ollama pull 0xroyce/plutus
 
 ### 4. Run (~1 min)
 
+Start the API server:
 ```bash
 python scripts/run_server.py
+```
+
+In a separate terminal, start the background workers (scanner, RL optimizer):
+```bash
+python scripts/run_workers.py
 ```
 
 - Swagger: http://localhost:8000/api/docs
@@ -106,8 +112,8 @@ python scripts/run_advisor_scan.py
 
 | Component | Role |
 |-----------|------|
-| **FastAPI** | Advisor API + optional news feed |
-| **Advisor scanner** | Background scan when `ENABLE_BACKGROUND_SCANNER=true` |
+| **FastAPI** | Advisor API + optional news feed (`scripts/run_server.py`) |
+| **Advisor workers** | Background scan + RL weight tuning (`scripts/run_workers.py`) |
 | **CoinDCX** | Candles via [`src/data/data_fetcher.py`](src/data/data_fetcher.py) |
 | **Confluence** | [`src/planitt/confluence.py`](src/planitt/confluence.py) |
 | **Ollama** | Optional PDF narrative (Plutus) |

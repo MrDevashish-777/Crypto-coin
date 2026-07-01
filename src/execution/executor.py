@@ -88,7 +88,7 @@ class ExecutionEngine:
             if size_in_contracts < 1:
                 size_in_contracts = 1
                 
-            side = "buy" if signal.direction.lower() == "long" else "sell"
+            side = "buy" if signal.direction == "BUY" else "sell"
 
             logger.info("Placing order for %s: %s %d contracts (Margin: $%.2f)", 
                         signal.symbol, side.upper(), size_in_contracts, margin_to_use)

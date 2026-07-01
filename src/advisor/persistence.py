@@ -9,6 +9,7 @@ from typing import Any
 from config.settings import settings
 from src.advisor.reconciliation import doc_to_replay_params, replay_outcome_from_candles
 from src.advisor.schemas import AdvisorSignal
+from src.advisor.validity import entry_miss_eligible_for_review
 from src.data.models import CandleList
 from src.database.db import get_db
 from src.planitt.mongo_collections import crypto_signals_collection
@@ -67,7 +68,47 @@ async def persist_advisor_signal(signal: AdvisorSignal) -> str:
     return signal.signal_id
 
 
-async def has_open_advisor_signal(symbol: str, timeframe: str | None = None) -> bool:
+async def expire_stale_open_signals() -> int:
+    """Mark OPEN signals past valid_until as EXPIRED so they stop blocking new publishes."""
+    from src.advisor.reconciliation import _parse_dt
+
+    db = await get_db()
+    coll = db[crypto_signals_collection()]
+    docs = await coll.find(
+        {"source_backend": "coindcx_advisor", "status": "OPEN"},
+        {"_id": 0, "signal_id": 1, "valid_until_ist": 1},
+    ).to_list(500)
+    now = datetime.now(timezone.utc)
+    expired = 0
+    for doc in docs:
+        valid_until = _parse_dt(doc.get("valid_until_ist"))
+        if valid_until is None:
+            continue
+        if now <= valid_until.astimezone(timezone.utc):
+            continue
+        await coll.update_one(
+            {"signal_id": doc["signal_id"]},
+            {
+                "$set": {
+                    "status": "EXPIRED",
+                    "outcome": "expired",
+                    "closed_at": now.isoformat(),
+                    "pnl_r_multiple": 0.0,
+                }
+            },
+        )
+        expired += 1
+    if expired:
+        logger.info("Expired %d stale OPEN advisor signals", expired)
+    return expired
+
+
+async def has_open_advisor_signal(
+    symbol: str,
+    timeframe: str | None = None,
+    *,
+    direction: str | None = None,
+) -> bool:
     """Check if there is an existing OPEN advisor signal for a symbol (and optional timeframe)."""
     db = await get_db()
     coll = db[crypto_signals_collection()]
@@ -80,6 +121,8 @@ async def has_open_advisor_signal(symbol: str, timeframe: str | None = None) -> 
         query["timeframe"] = timeframe
     elif not settings.ADVISOR_ALLOW_MULTI_TF_PER_SYMBOL:
         pass  # any open on symbol blocks
+    if settings.ADVISOR_BLOCK_OPEN_SAME_DIRECTION_ONLY and direction:
+        query["direction"] = direction.upper()
     count = await coll.count_documents(query)
     return count > 0
 
@@ -144,6 +187,24 @@ async def _close_single_document(
 ) -> bool:
     params = doc_to_replay_params(doc)
     candles = candle_list.candles if candle_list is not None else []
+
+    entry_range = doc.get("entry_range") or [params["entry"], params["entry"]]
+    entry_low, entry_high = float(entry_range[0]), float(entry_range[1])
+    if entry_miss_eligible_for_review(latest_price, entry_low, entry_high):
+        await coll.update_one(
+            {"signal_id": doc["signal_id"]},
+            {
+                "$set": {
+                    "review_status": "ENTRY_MISS_REVIEW",
+                    "entry_miss_pct": round(
+                        abs(latest_price - ((entry_low + entry_high) / 2.0))
+                        / max((entry_low + entry_high) / 2.0, 1e-9)
+                        * 100.0,
+                        3,
+                    ),
+                }
+            },
+        )
 
     if fetcher is not None and params["generated_ts_ms"] > 0:
         generated_at = datetime.fromtimestamp(

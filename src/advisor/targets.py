@@ -10,18 +10,21 @@ from src.indicators.fibonacci import FibonacciLevels
 from src.indicators.nadaraya_watson import NadarayaWatsonEnvelope
 from src.indicators.pivot_points import PivotPoints
 from src.indicators.smc import SMC
+from src.planitt.smc_setup import opposing_liquidity_tp
 from src.planitt.confluence import ConfluenceFeatures, find_pivots
+from src.advisor.adaptive import build_level_adjustments
 from src.risk.risk_manager import RiskManager
 from src.signals.market_regime import MarketRegime, MarketRegimeDetector
 
 Direction = Literal["long", "short"]
 
 
-def _sop_constants() -> dict[str, float]:
+def _sop_constants(timeframe: str = "1h") -> dict[str, float]:
+    min_rr = settings.SOP_SWING_MIN_RR if timeframe in ("4h", "1d") else settings.SOP_MIN_RR
     return {
         "min_sl_pct": settings.SOP_MIN_SL_PCT,
         "max_sl_pct": settings.SOP_MAX_SL_PCT,
-        "min_rr": settings.SOP_MIN_RR,
+        "min_rr": min_rr,
         "lev_sl_min": settings.SOP_LEVERAGED_SL_MIN,
         "lev_sl_max": settings.SOP_LEVERAGED_SL_MAX,
     }
@@ -32,37 +35,46 @@ def _anchor_entry_band(price: float, entry_low: float, entry_high: float) -> tup
     low, high = sorted([entry_low, entry_high])
     if low <= price <= high:
         return low, high
-    half = max((high - low) / 2.0, price * 0.0025)
-    half = min(half, price * 0.0075)
+        
+    min_half_pct = settings.TARGET_ENTRY_MIN_WIDTH_PCT / 200.0
+    max_half_pct = settings.TARGET_ENTRY_MAX_WIDTH_PCT / 200.0
+    
+    half = max((high - low) / 2.0, price * min_half_pct)
+    half = min(half, price * max_half_pct)
+    
     new_low, new_high = price - half, price + half
     width_pct = (new_high - new_low) / price * 100.0
-    if width_pct < 0.5:
-        half = price * 0.0025
+    
+    if width_pct < settings.TARGET_ENTRY_MIN_WIDTH_PCT:
+        half = price * min_half_pct
         new_low, new_high = price - half, price + half
-    elif width_pct > 1.5:
-        half = price * 0.0075
+    elif width_pct > settings.TARGET_ENTRY_MAX_WIDTH_PCT:
+        half = price * max_half_pct
         new_low, new_high = price - half, price + half
     return new_low, new_high
 
 
 def _entry_band(price: float, atr: float, *, setup_type: str, key_level: float, direction: Direction) -> tuple[float, float]:
-    """Entry range 0.5–1.5% width centered near current structure."""
+    """Entry range based on settings width centered near current structure."""
     mid = price
     if setup_type == "trend_pullback":
         mid = (price + key_level) / 2.0 if key_level else price
     elif setup_type == "volume_breakout":
         mid = key_level if key_level else price
+    elif setup_type == "fvg_ob_retest":
+        mid = key_level if key_level else price
 
-    half_pct = 0.005
-    half = max(mid * half_pct, atr * 0.04)
+    min_half_pct = settings.TARGET_ENTRY_MIN_WIDTH_PCT / 200.0
+    max_half_pct = settings.TARGET_ENTRY_MAX_WIDTH_PCT / 200.0
+
+    half = max(mid * settings.TARGET_ENTRY_HALF_PCT, atr * settings.TARGET_ATR_ENTRY_MULT)
     width_pct = (2 * half) / mid * 100.0
-    if width_pct < 0.5:
-        half = mid * 0.0025
-    elif width_pct > 1.5:
-        half = mid * 0.0075
+    
+    if width_pct < settings.TARGET_ENTRY_MIN_WIDTH_PCT:
+        half = mid * min_half_pct
+    elif width_pct > settings.TARGET_ENTRY_MAX_WIDTH_PCT:
+        half = mid * max_half_pct
 
-    if direction == "long":
-        return mid - half, mid + half
     return mid - half, mid + half
 
 
@@ -182,7 +194,7 @@ def compute_advisor_levels(
     """
     Compute entry band, single SL/TP, and SOP percentages using adaptive risk + structure.
     """
-    sop = _sop_constants()
+    sop = _sop_constants(features.timeframe)
     side = features.side
     direction: Direction = "long" if side == "BUY" else "short"
     price = float(live_price if live_price is not None else features.price)
@@ -196,6 +208,7 @@ def compute_advisor_levels(
         key_level=float(features.key_level),
         direction=direction,
     )
+    entry_low, entry_high = _anchor_entry_band(price, entry_low, entry_high)
     entry_mid = (entry_low + entry_high) / 2.0
 
     high_prob = (
@@ -203,6 +216,13 @@ def compute_advisor_levels(
         and features.agreeing_sources >= settings.SOP_HIGH_CONF_MIN_SOURCES
     )
     regime = _regime_label(candle_list)
+    level_adj = build_level_adjustments(
+        candle_list=candle_list,
+        symbol=features.asset,
+        timeframe=features.timeframe,
+        direction=side,
+        regime=regime,
+    )
     risk_manager = RiskManager(min_risk_reward=sop["min_rr"])
 
     fib_data = None
@@ -229,6 +249,12 @@ def compute_advisor_levels(
         except Exception:
             pass
 
+    big_move = (
+        features.setup_type == "fvg_ob_retest"
+        and "smc_fvg_ob_overlap" in features.confluence_hits
+    )
+    smc_min_rr = settings.ADVISOR_SMC_BIG_MOVE_MIN_RR if big_move else sop["min_rr"]
+
     target, stop_loss, _meta = risk_manager.calculate_adaptive_tp_sl(
         entry_price=entry_mid,
         atr=atr,
@@ -238,9 +264,22 @@ def compute_advisor_levels(
         pivot_levels=pivot_levels,
         smc_data=smc_data,
         high_probability=high_prob,
+        sl_volatility_scale=level_adj.sl_scale,
+        tp_volatility_scale=level_adj.tp_scale,
     )
 
     tp_sl_method = "atr_structure"
+    if big_move and smc_data is not None:
+        liq_tp = opposing_liquidity_tp(
+            smc_data,
+            entry=entry_mid,
+            side=side,
+            min_rr=smc_min_rr,
+            sl=stop_loss,
+        )
+        if liq_tp is not None:
+            target = liq_tp
+            tp_sl_method = "smc_liquidity"
     use_nwe = _use_nwe_tp_sl(features, high_prob=high_prob)
     if use_nwe and candle_list is not None and len(candle_list.closes) >= 50:
         nwe_levels = _nwe_tp_sl(
@@ -272,7 +311,7 @@ def compute_advisor_levels(
     sl_pct = abs(entry_mid - stop_loss) / entry_mid * 100.0
     tp_pct = abs(target - entry_mid) / entry_mid * 100.0
 
-    min_rr = settings.SOP_HIGH_CONF_MIN_RR if high_prob else sop["min_rr"]
+    min_rr = settings.SOP_HIGH_CONF_MIN_RR if high_prob else (smc_min_rr if big_move else sop["min_rr"])
     risk = abs(entry_mid - stop_loss)
     reward = abs(target - entry_mid)
     rr = reward / max(risk, 1e-9)
@@ -335,6 +374,8 @@ def compute_advisor_levels(
         chart_indicators.append("NWE")
     if any(h.startswith("vote_supertrend") or h.startswith("vote_ichimoku") for h in features.confluence_hits):
         chart_indicators.append("Supertrend")
+    if any(h.startswith("smc_") for h in features.confluence_hits):
+        chart_indicators.append("SMC")
     if "ema_alignment" in features.confluence_hits or "swing_structure" in features.confluence_hits:
         chart_indicators.append("EMA 50")
     if "rsi_macd_confirmation" in features.confluence_hits:
@@ -345,8 +386,38 @@ def compute_advisor_levels(
         chart_indicators.append("ADX 14")
     chart_indicators = chart_indicators[:2]
 
-    entry_low, entry_high = _anchor_entry_band(price, entry_low, entry_high)
-    entry_mid = (entry_low + entry_high) / 2.0
+    # Final SOP enforcement
+    sop_min_rr = sop["min_rr"]
+    
+    # 1. Enforce SL bounds strictly
+    current_sl_pct = abs(entry_mid - stop_loss) / entry_mid * 100.0
+    if current_sl_pct < sop["min_sl_pct"]:
+        current_sl_pct = sop["min_sl_pct"]
+    elif current_sl_pct > sop["max_sl_pct"]:
+        current_sl_pct = sop["max_sl_pct"]
+        
+    if side == "BUY":
+        stop_loss = entry_mid * (1 - current_sl_pct / 100.0)
+    else:
+        stop_loss = entry_mid * (1 + current_sl_pct / 100.0)
+
+    # 2. Enforce RR and Target
+    risk = abs(entry_mid - stop_loss)
+    reward = abs(target - entry_mid)
+    rr = reward / max(risk, 1e-9)
+    if rr < sop_min_rr:
+        if side == "BUY":
+            target = entry_mid + risk * sop_min_rr
+        else:
+            target = entry_mid - risk * sop_min_rr
+            
+    tp_pct = abs(target - entry_mid) / entry_mid * 100.0
+    sl_pct = risk / entry_mid * 100.0
+    
+    # 3. Mathematically lock Leverage = 20 / SL%
+    leverage = 20.0 / sl_pct
+    
+    rr = tp_pct / max(sl_pct, 1e-9)
 
     result = {
         "entry_low": round(entry_low, 8),

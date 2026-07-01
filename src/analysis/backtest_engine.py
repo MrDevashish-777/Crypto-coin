@@ -8,21 +8,23 @@ from typing import Any, Iterator, Optional
 from zoneinfo import ZoneInfo
 
 from config.settings import settings
-from src.advisor.allocation import WeeklyAllocationTracker
+from config.constants import TOP_MCAP_SYMBOLS
+from src.advisor.allocation import WeeklyAllocationTracker, is_scannable_symbol
 from src.advisor.macro_trend import validate_macro_for_signal
 from src.advisor.reachability import reachability_from_levels
 from src.advisor.segment_gates import (
     get_publish_thresholds,
     mtf_min_agreeing_for,
+    passes_high_accuracy_mode,
     passes_segment_quality,
     validate_tier_a,
 )
 from src.advisor.sop_gates import validate_levels
 from src.advisor.targets import compute_advisor_levels
-from src.advisor.validity import compute_valid_until, infer_trade_horizon
+from src.advisor.validity import compute_valid_until, infer_trade_horizon, validate_publish_timeframe
 from src.analysis.backtest_config import get_bucket_expectancy, quality_tier
 from src.data.models import Candle, CandleList
-from src.planitt.confluence import evaluate_confluence_pre_gates_with_reason
+from src.planitt.confluence import adx_trend_threshold_for_timeframe, evaluate_confluence_pre_gates_with_reason
 from src.planitt.mtf_confluence import check_htf_alignment, higher_timeframes_for
 
 logger = logging.getLogger(__name__)
@@ -374,7 +376,7 @@ class BacktestEngine:
 
                 eval_result = evaluate_confluence_pre_gates_with_reason(
                     window,
-                    adx_trend_threshold=gate_values["PLANITT_ADX_TREND_THRESHOLD"],
+                    adx_trend_threshold=adx_trend_threshold_for_timeframe(candle_list.timeframe),
                     volume_multiplier=gate_values["PLANITT_VOLUME_MULTIPLIER"],
                     touch_tolerance_pct=gate_values["PLANITT_TOUCH_TOLERANCE_PCT"],
                     min_confluence_hits=gate_values["ADVISOR_MIN_CONFLUENCE_HITS"],
@@ -397,6 +399,18 @@ class BacktestEngine:
                     reject_reasons["symbol_not_in_allowlist"] = (
                         reject_reasons.get("symbol_not_in_allowlist", 0) + 1
                     )
+                    continue
+                ok_cap, cap_reason = is_scannable_symbol(candle_list.symbol)
+                if not ok_cap or candle_list.symbol.upper() not in TOP_MCAP_SYMBOLS:
+                    dropped += 1
+                    reason = (cap_reason or "outside_top_mcap_universe").split(":")[0]
+                    reject_reasons[reason] = reject_reasons.get(reason, 0) + 1
+                    continue
+                ok_tf, tf_reason = validate_publish_timeframe(candle_list.timeframe)
+                if not ok_tf:
+                    dropped += 1
+                    reason = (tf_reason or "timeframe_blocked").split(":")[0]
+                    reject_reasons[reason] = reject_reasons.get(reason, 0) + 1
                     continue
 
                 profile = get_publish_thresholds(features.side, candle_list.timeframe)
@@ -475,6 +489,15 @@ class BacktestEngine:
                 if not ok_seg:
                     dropped += 1
                     reason = (seg_reason or "segment_quality").split(":")[0]
+                    reject_reasons[reason] = reject_reasons.get(reason, 0) + 1
+                    continue
+                ok_accuracy, accuracy_reason = passes_high_accuracy_mode(
+                    features,
+                    composite_score=composite,
+                )
+                if not ok_accuracy:
+                    dropped += 1
+                    reason = (accuracy_reason or "high_accuracy").split(":")[0]
                     reject_reasons[reason] = reject_reasons.get(reason, 0) + 1
                     continue
                 if settings.ADVISOR_BLOCK_NEGATIVE_BUCKETS:

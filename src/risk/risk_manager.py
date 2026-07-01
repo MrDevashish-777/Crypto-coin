@@ -55,6 +55,9 @@ class RiskManager:
         pivot_levels: Optional[Dict] = None,
         smc_data: Optional[Dict] = None,
         high_probability: bool = False,
+        *,
+        sl_volatility_scale: float = 1.0,
+        tp_volatility_scale: float = 1.0,
     ) -> Tuple[float, float, Dict]:
         """
         Calculate TP and SL adaptively based on ATR and market regime.
@@ -86,6 +89,8 @@ class RiskManager:
 
         # Step 1: Get regime multipliers
         tp_mult, sl_mult = self._get_regime_multipliers(regime)
+        sl_mult *= max(1.0, sl_volatility_scale)
+        tp_mult *= max(0.75, min(1.25, tp_volatility_scale))
         logger.debug(f"Regime={regime}: TP×{tp_mult}, SL×{sl_mult}")
 
         # Step 2: Calculate raw ATR-based levels
@@ -200,9 +205,9 @@ class RiskManager:
             "trending":    (2.5, 1.6),
             "trending_up": (2.5, 1.6),
             "trending_down": (2.5, 1.6),
-            "ranging":     (1.5, 1.1),
-            "volatile":    (1.8, 0.9),
-            "choppy":      (1.5, 0.8),
+            "ranging":     (1.4, 1.35),
+            "volatile":    (1.6, 1.2),
+            "choppy":      (1.3, 1.25),
         }
         return multipliers.get(regime, (2.2, 1.3))  # default if unknown
 

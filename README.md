@@ -44,6 +44,9 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 python scripts/run_server.py
+
+# In a separate terminal, start the background workers:
+python scripts/run_workers.py
 ```
 
 - API docs: http://localhost:8000/api/docs
@@ -110,7 +113,7 @@ src/indicators/   Technical indicator library
 src/llm/          Ollama / OpenAI / Anthropic agents
 src/reports/      PDF and chart rendering
 src/api/          FastAPI server and routes
-scripts/          run_server.py, run_advisor_scan.py
+scripts/          run_server.py, run_workers.py, run_advisor_scan.py
 tests/            Advisor and confluence tests
 ```
 

@@ -38,6 +38,7 @@ INDICATOR_WEIGHTS: dict[str, float] = {
     "nwe": settings.NWE_WEIGHT,
     "macd": 0.09,
     "rsi": 0.09,
+    "adx_di": 0.08,
     "volume_obv": 0.07,
     "vwap": 0.05,
     "bollinger": 0.05,
@@ -77,6 +78,18 @@ def get_active_weights() -> dict[str, float]:
                     weights[k] = float(v)
         except Exception as exc:
             print(f"Error loading learned weights: {exc}")
+    if settings.PLANITT_CRYPTO_FUTURES_ANALYSIS:
+        for key, mult in (
+            ("supertrend", 1.15),
+            ("vwap", 1.20),
+            ("smc", 1.25),
+            ("ema_stack", 1.10),
+            ("ichimoku", 1.10),
+        ):
+            if key in weights:
+                weights[key] *= mult
+        total = sum(weights.values()) or 1.0
+        weights = {k: v / total for k, v in weights.items()}
     return weights
 
 
@@ -89,6 +102,25 @@ class IndicatorVoteResult:
     bull_score: float
     bear_score: float
     reject_reason: Optional[str]
+
+
+def _adx_di_vote(
+    *,
+    adx: float | None,
+    plus_di: float | None,
+    minus_di: float | None,
+    min_adx: float = 16.0,
+) -> tuple[Optional[str], float]:
+    """ADX + DI trend — primary directional filter on crypto perps."""
+    if adx is None or plus_di is None or minus_di is None or adx < min_adx:
+        return None, 0.0
+    spread = plus_di - minus_di
+    strength = min(0.92, abs(spread) / 12.0)
+    if spread >= 1.5:
+        return "bull", strength
+    if spread <= -1.5:
+        return "bear", strength
+    return None, 0.0
 
 
 def _rsi_vote(closes: list[float]) -> tuple[Optional[str], float]:
@@ -346,6 +378,17 @@ def _smc_vote(opens, highs, lows, closes, volumes, price: float) -> tuple[Option
             return "bull", 0.65, False
         if ob["type"] == "bearish":
             return "bear", 0.65, False
+
+    for fvg in reversed(data.get("fvgs", [])[-5:]):
+        if not fvg.get("active"):
+            continue
+        mid = (fvg["top"] + fvg["bottom"]) / 2.0
+        if abs(price - mid) / mid > tol:
+            continue
+        if fvg["type"] == "bullish":
+            return "bull", 0.60, False
+        if fvg["type"] == "bearish":
+            return "bear", 0.60, False
     return None, 0.0, False
 
 
@@ -382,6 +425,9 @@ def evaluate_indicator_votes(
     key_level: float,
     ema50: float,
     timeframe: str | None = None,
+    adx: float | None = None,
+    plus_di: float | None = None,
+    minus_di: float | None = None,
 ) -> IndicatorVoteResult:
     """Compute weighted indicator votes; side must align with expected_side."""
     tf = timeframe or candle_list.timeframe or "1h"
@@ -404,6 +450,7 @@ def evaluate_indicator_votes(
         "ema_stack": _ema_vote(closes),
         "supertrend": _supertrend_vote(highs, lows, closes),
         "ichimoku": _ichimoku_vote(highs, lows, closes, price),
+        "adx_di": _adx_di_vote(adx=adx, plus_di=plus_di, minus_di=minus_di),
         "volume_obv": _obv_vote(closes, volumes),
         "vwap": _vwap_vote(highs, lows, closes, volumes, price),
         "bollinger": _bollinger_vote(closes, price),
@@ -446,6 +493,15 @@ def evaluate_indicator_votes(
             bear_sources += 1
             if expected_side == "SELL":
                 hits.append(f"vote_{name}")
+
+    if settings.PLANITT_CRYPTO_FUTURES_ANALYSIS:
+        st_dir = votes.get("supertrend", (None, 0.0))[0]
+        di_dir = votes.get("adx_di", (None, 0.0))[0]
+        if st_dir and di_dir and st_dir == di_dir:
+            if st_dir == "bull":
+                bull_score += 0.05
+            else:
+                bear_score += 0.05
 
     side_is_bull = expected_side == "BUY"
     win_score = bull_score if side_is_bull else bear_score
