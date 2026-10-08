@@ -1,6 +1,6 @@
 # Mac mini M4 (Apple Silicon) setup
 
-This advisor stack is **designed to run natively on Apple Silicon** (M1/M2/M3/M4). No Docker, no x86 emulation, and no NestJS admin required.
+This advisor stack can run **natively on Apple Silicon** (M1/M2/M3/M4) or as a unique Docker stack that sits beside other containers — see [DOCKER.md](DOCKER.md).
 
 | Component | Mac M4 status |
 |-----------|----------------|
@@ -173,7 +173,7 @@ Set `SERVER_PORT=8001` in `.env`.
 
 ## What you do not need on Mac mini
 
-- Docker / docker-compose (removed from this repo’s main path)
+- Docker / docker-compose for 24/7 — optional; see [DOCKER.md](DOCKER.md) if you want a unique stack beside other containers
 - NestJS or Next.js admin
 - Binance API keys
 - PostgreSQL / `DATABASE_URL`

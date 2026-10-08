@@ -80,8 +80,13 @@ In a separate terminal, start the background workers (scanner, RL optimizer):
 python scripts/run_workers.py
 ```
 
-- Swagger: http://localhost:8000/api/docs
-- Health: http://localhost:8000/health
+**Docker 24/7 (beside other containers):** see [docs/DOCKER.md](docs/DOCKER.md)
+
+```bash
+docker compose -p coindcx-advisor up -d --build
+```
+
+API: http://localhost:18080/health
 
 Protected routes need header `x-api-key` = `PLANITT_PROCESSOR_INTERNAL_API_KEY`.
 
